@@ -8,6 +8,9 @@ import {
   SectionCard,
   NonIdealState,
   Button,
+  Tag,
+  Tabs,
+  Tab,
 } from '@blueprintjs/core';
 import { useState } from 'react';
 import { DETAIL_TABS } from './constants/constants';
@@ -38,8 +41,14 @@ const Action = (
     minimal
     outlined
     small
-    intent="success"
+    intent="none"
   />
+);
+
+const getRightElement = (num) => (
+  <Tag intent="danger" round>
+    {num}
+  </Tag>
 );
 
 let dog = {
@@ -56,7 +65,10 @@ let dog = {
       { data: 'Doesnt like woods', priority: 'info' },
     ],
     diet: [{ data: 'ID Only', priority: 'danger' }],
-    behavior: [{ data: 'Doesnt like dark', priority: 'danger' }],
+    behavior: [
+      { data: 'Doesnt like dark', priority: 'danger' },
+      { data: 'good boy!', priority: 'good' },
+    ],
     friends: [],
     medical: [{ data: 'Spay on 2/1', priority: 'info' }],
     misc: [],
@@ -92,26 +104,45 @@ const Home = () => {
           </CardDataWrapper>
         </Card>
 
+        <Tabs
+          selectedTabId="det"
+          className="bp5-monospace-text"
+          fill={false}
+          large={false}
+        >
+          <Tab id="det" title="Details" />
+          <Tab title="Activity History" />
+          <Tab title="Behavior Notes" />
+          <Tab title="QR Code" />
+        </Tabs>
+
         {DETAIL_TABS.map((tab, index) => (
           <Section
             key={index}
-            collapsible
+            collapsible={true}
             title={tab}
             className="bp5-monospace-text"
+            rightElement={
+              dog['details'][tab.toLocaleLowerCase()].length == 0
+                ? null
+                : getRightElement(
+                    dog['details'][tab.toLocaleLowerCase()].length
+                  )
+            }
           >
             <SectionCard padded={true}>
               {dog['details'][tab.toLocaleLowerCase()].length !== 0 ? (
                 <div>
                   <div>
                     {dog['details'][tab.toLowerCase()]
-                      .filter((a) => a.priority === 'good')
+                      .filter((a) => a.priority === 'danger')
                       .map((alert, index) =>
                         alert ? <Tags key={index} alert={alert} /> : null
                       )}
                   </div>
                   <div>
                     {dog['details'][tab.toLowerCase()]
-                      .filter((a) => a.priority === 'danger')
+                      .filter((a) => a.priority === 'good')
                       .map((alert, index) =>
                         alert ? <Tags key={index} alert={alert} /> : null
                       )}
