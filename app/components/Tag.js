@@ -5,7 +5,7 @@ const Tags = (props) => {
   const { alert } = props;
   return (
     <Tag
-      removable={true}
+      onRemove={true}
       intent={mapColorToIntent(alert.priority)}
       style={{ marginBottom: '5px', marginLeft: '5px' }}
       minimal={true}
