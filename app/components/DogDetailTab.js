@@ -8,6 +8,9 @@ import {
 import { DETAIL_CATEGORIES } from '../constants/constants';
 import { useState } from 'react';
 
+// Components
+import Tags from './Tag';
+
 const getRightElement = (num) => (
   <Tag intent="danger" round>
     {num}
@@ -24,9 +27,6 @@ const Action = (
     intent="none"
   />
 );
-
-// Components
-import Tags from './Tag';
 
 const DogDetailTab = (props) => {
   const { dog } = props;
