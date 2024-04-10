@@ -6,6 +6,7 @@ import {
   Button,
 } from '@blueprintjs/core';
 import { DETAIL_CATEGORIES } from '../constants/constants';
+import { useState } from 'react';
 
 const getRightElement = (num) => (
   <Tag intent="danger" round>
@@ -29,12 +30,57 @@ import Tags from './Tag';
 
 const DogDetailTab = (props) => {
   const { dog } = props;
+  const [alertsIsOpen, setAlertsIsOpen] = useState(true);
+  const [dietIsOpen, setDietIsOpen] = useState(false);
+  const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
+  const [friendsIsOpen, setFriendsIsOpen] = useState(false);
+  const [miscIsOpen, setMiscIsOpen] = useState(false);
+
+  const toggleAlertsIsOpen = () => {
+    setAlertsIsOpen(!alertsIsOpen);
+  };
+
+  const toggleDietIsOpen = () => {
+    setDietIsOpen(!dietIsOpen);
+  };
+
+  const toggleBehaviorIsOpen = () => {
+    setBehaviorIsOpen(!behaviorIsOpen);
+  };
+
+  const toggleFriendsIsOpen = () => {
+    setFriendsIsOpen(!friendsIsOpen);
+  };
+
+  const toggleMiscIsOpen = () => {
+    setMiscIsOpen(!miscIsOpen);
+  };
+
+  const stateMap = {
+    Alerts: alertsIsOpen,
+    Diet: dietIsOpen,
+    Behavior: behaviorIsOpen,
+    Friends: friendsIsOpen,
+    Misc: miscIsOpen,
+  };
+  const functionMap = {
+    Alerts: toggleAlertsIsOpen,
+    Diet: toggleDietIsOpen,
+    Behavior: toggleBehaviorIsOpen,
+    Friends: toggleFriendsIsOpen,
+    Misc: toggleMiscIsOpen,
+  };
+
   return (
     <div>
       {DETAIL_CATEGORIES.map((tab, index) => (
         <Section
           key={index}
           collapsible={true}
+          collapseProps={{
+            isOpen: stateMap[tab],
+            onToggle: functionMap[tab],
+          }}
           title={tab}
           className="bp5-monospace-text"
           rightElement={
