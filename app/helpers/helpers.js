@@ -27,3 +27,8 @@ export function mapLevelToColor(level) {
       return '#90A4AE';
   }
 }
+
+export function toSnakeCase(string) {
+  let lowered = string.toLowerCase();
+  return lowered.replace(' ', '_');
+}
