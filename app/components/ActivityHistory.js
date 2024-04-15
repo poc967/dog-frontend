@@ -1,18 +1,20 @@
+import { HTMLTable } from '@blueprintjs/core';
 import styled from 'styled-components';
 
-const Table = styled.table`
+const Table = styled(HTMLTable)`
   width: 100%;
 `;
 
 const ActivityHistory = (props) => {
   let activityHistory = props.dog.activity_history;
   return (
-    <Table className="bp5-html-table">
+    <Table className="bp5-html-table" striped={true}>
       <thead>
         <tr>
           <th>Time</th>
           <th>Activity</th>
           <th>Location</th>
+          <th>Friends</th>
         </tr>
       </thead>
       <tbody>
@@ -21,6 +23,7 @@ const ActivityHistory = (props) => {
             <td>{activity.time}</td>
             <td>{activity.type}</td>
             <td>{activity.location}</td>
+            <td>{activity.friends.join(', ')}</td>
           </tr>
         ))}
       </tbody>

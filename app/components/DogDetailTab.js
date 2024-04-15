@@ -5,7 +5,7 @@ import {
   Tag,
   Button,
 } from '@blueprintjs/core';
-import { DETAIL_CATEGORIES } from '../constants/constants';
+import { DETAIL_CATEGORIES, PRIORITIES } from '../constants/constants';
 import { useState } from 'react';
 
 // Components
@@ -63,6 +63,7 @@ const DogDetailTab = (props) => {
     Friends: friendsIsOpen,
     Misc: miscIsOpen,
   };
+
   const functionMap = {
     Alerts: toggleAlertsIsOpen,
     Diet: toggleDietIsOpen,
@@ -92,27 +93,15 @@ const DogDetailTab = (props) => {
           <SectionCard padded={true}>
             {dog['details'][tab.toLocaleLowerCase()].length !== 0 ? (
               <div>
-                <div>
-                  {dog['details'][tab.toLowerCase()]
-                    .filter((a) => a.priority === 'danger')
-                    .map((alert, index) =>
-                      alert ? <Tags key={index} alert={alert} /> : null
-                    )}
-                </div>
-                <div>
-                  {dog['details'][tab.toLowerCase()]
-                    .filter((a) => a.priority === 'good')
-                    .map((alert, index) =>
-                      alert ? <Tags key={index} alert={alert} /> : null
-                    )}
-                </div>
-                <div>
-                  {dog['details'][tab.toLowerCase()]
-                    .filter((a) => a.priority === 'info')
-                    .map((alert, index) =>
-                      alert ? <Tags key={index} alert={alert} /> : null
-                    )}
-                </div>
+                {PRIORITIES.map((priority, index) => (
+                  <div key={index}>
+                    {dog['details'][tab.toLowerCase()]
+                      .filter((a) => a.priority === priority)
+                      .map((alert, index) =>
+                        alert ? <Tags key={index} alert={alert} /> : null
+                      )}
+                  </div>
+                ))}
               </div>
             ) : (
               <NonIdealState title="Nothing to see here!" action={Action} />

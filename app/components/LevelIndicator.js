@@ -3,9 +3,9 @@ import { mapLevelToColor } from '../helpers/helpers';
 
 const Container = styled.div`
   width: 3rem;
-  height: 17%;
+  height: 1.2rem;
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: ${(props) => (props.compact == true ? '0px' : '10px')};
 `;
 
 const HalfOne = styled.div`
