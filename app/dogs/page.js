@@ -9,6 +9,7 @@ import {
 } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 // components
 import LevelIndicator from '../components/LevelIndicator';
@@ -20,21 +21,25 @@ const Wrapper = styled.div`
   margin: 0 auto;
   margin-top: 1rem;
   margin-bottom: 1rem;
+  width: 75vw;
 
-  @media ${devices.sm} {
-    width: 95vw;
+  @media ${devices['2xl']} {
+    width: 75vw;
   }
-  @media ${devices.md} {
-    width: 95vw;
-  }
-  @media ${devices.xs} {
-    width: 95vw;
+  @media ${devices.xl} {
+    width: 80vw;
   }
   @media ${devices.lg} {
     width: 80vw;
   }
-  @media ${devices.xl} {
-    width: 80vw;
+  @media ${devices.md} {
+    width: 95vw;
+  }
+  @media ${devices.sm} {
+    width: 95vw;
+  }
+  @media ${devices.xs} {
+    width: 95vw;
   }
 `;
 
@@ -88,13 +93,50 @@ const InputWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   margin-bottom: 10px;
+
+  @media ${devices.sm} {
+    flex-direction: column;
+  }
 `;
 
 const SearchWrapper = styled.div`
-  width: 25%;
+  width: 35%;
+
+  @media ${devices.sm} {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
 `;
 const Dogs = () => {
+  const [domSize, setDomSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+  const [includeButtonNames, setIncludeButtonNames] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDomSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup function to remove event listener when component unmounts
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Check if the DOM size meets a certain condition
+    if (domSize.width > 910) {
+      // Update component state accordingly
+      setIncludeButtonNames(true);
+    } else {
+      setIncludeButtonNames(false);
+    }
+  }, [domSize]);
 
   return (
     <Wrapper>
@@ -106,17 +148,34 @@ const Dogs = () => {
             placeholder="Search..."
           />
         </SearchWrapper>
-        <ButtonGroup className="bp5-monospace-text">
-          <Button text="Move dog" icon="changes" small={true} />
-          <Button text="Start walk" icon="walk" small={true} />
-          <Button text="New Behavior Note" icon="git-repo" small={true} />
+        <ButtonGroup
+          className="bp5-monospace-text"
+          style={{ minWidth: '12rem' }}
+        >
+          <Button
+            text={includeButtonNames ? 'Move dog(s)' : null}
+            icon="changes"
+            small={true}
+            outlined={true}
+            fill={!includeButtonNames}
+          />
+          <Button
+            text={includeButtonNames ? 'Start walk' : null}
+            icon="walk"
+            small={true}
+            outlined={true}
+            fill={!includeButtonNames}
+          />
+          <Button
+            text={includeButtonNames ? 'New Behavior Note' : null}
+            icon="git-repo"
+            small={true}
+            outlined={true}
+            fill={!includeButtonNames}
+          />
         </ButtonGroup>
       </InputWrapper>
-      <StyledTable
-        interactive={true}
-        className="bp5-monospace-text"
-        compact={true}
-      >
+      <StyledTable className="bp5-monospace-text" compact={!includeButtonNames}>
         <thead>
           <tr>
             <th></th>
@@ -141,7 +200,7 @@ const Dogs = () => {
                 />
               </td>
               <td>{dog.location}</td>
-              <td>2hr 15min</td>
+              <td>2:15</td>
             </tr>
           ))}
         </tbody>

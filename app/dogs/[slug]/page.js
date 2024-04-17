@@ -22,23 +22,23 @@ const Wrapper = styled.div`
   margin-top: 1rem;
   margin-bottom: 1rem;
 
+  @media ${devices['2xl']} {
+    width: 45vw;
+  }
+  @media ${devices.xl} {
+    width: 45vw;
+  }
+  @media ${devices.lg} {
+    width: 80vw;
+  }
+  @media ${devices.md} {
+    width: 95vw;
+  }
   @media ${devices.xs} {
     width: 95vw;
   }
   @media ${devices.sm} {
     width: 95vw;
-  }
-  @media ${devices.md} {
-    width: 95vw;
-  }
-  @media ${devices.lg} {
-    width: 80vw;
-  }
-  @media ${devices.xl} {
-    width: 45vw;
-  }
-  @media ${devices['2xl']} {
-    width: 45vw;
   }
 `;
 
