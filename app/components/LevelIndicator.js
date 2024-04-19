@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { mapLevelToColor } from '../helpers/helpers';
 
 const Container = styled.div`
-  width: 3rem;
+  width: ${(props) => (props.small == true ? '1.5rem' : '3rem')};
   height: 1.2rem;
   display: flex;
   margin-bottom: ${(props) => (props.compact == true ? '0px' : '10px')};
@@ -24,7 +24,7 @@ const HalfTwo = styled.div`
 
 const LevelIndicator = (props) => {
   return (
-    <Container>
+    <Container small={props.small}>
       <HalfOne color={mapLevelToColor(props.color1)}></HalfOne>
       <HalfTwo
         color={

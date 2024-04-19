@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 // components
 import LevelIndicator from '../components/LevelIndicator';
 import { devices } from '../constants/constants';
+import Link from 'next/link';
 
 const Wrapper = styled.div`
   display: flex;
@@ -141,6 +142,28 @@ const Dogs = () => {
   return (
     <Wrapper>
       <InputWrapper>
+        <ButtonGroup
+          className="bp5-monospace-text"
+          style={{ minWidth: '12rem' }}
+        >
+          <Button
+            text={includeButtonNames ? 'Add Dog' : null}
+            icon="plus"
+            small={true}
+            outlined={true}
+            fill={!includeButtonNames}
+          />
+          <Button
+            text={includeButtonNames ? 'Archive' : null}
+            icon="archive"
+            small={true}
+            outlined={true}
+            fill={!includeButtonNames}
+            disabled={true}
+          />
+        </ButtonGroup>
+      </InputWrapper>
+      <InputWrapper>
         <SearchWrapper>
           <InputGroup
             className="bp5-monospace-text"
@@ -175,28 +198,32 @@ const Dogs = () => {
           />
         </ButtonGroup>
       </InputWrapper>
-      <StyledTable className="bp5-monospace-text" compact={!includeButtonNames}>
-        <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Level</th>
-            <th>Location</th>
-            <th>Last Activity</th>
-          </tr>
-        </thead>
+      <StyledTable className="bp5-monospace-text bp5-html-table-striped">
+        {includeButtonNames ? (
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Level</th>
+              <th>Location</th>
+              <th>Last Out</th>
+            </tr>
+          </thead>
+        ) : null}
         <tbody>
           {dogs.map((dog, index) => (
-            <tr key={index} onClick={() => router.push(`/dogs/${dog.id}`)}>
+            <tr key={index}>
               <td>
                 <Checkbox />
               </td>
-              <td>{dog.name}</td>
+              <td>
+                <Link href={`/dogs/${dog.id}`}>{dog.name}</Link>
+              </td>
               <td valign="middle">
                 <LevelIndicator
                   color1={dog.level1}
                   color2={dog.level2}
-                  compact={true}
+                  small={true}
                 />
               </td>
               <td>{dog.location}</td>
