@@ -74,13 +74,27 @@ let dog = {
   activity_history: [
     {
       type: 'walk',
-      time: '4/5/2023 4:55p',
+      time: '4:55p',
       location: 'side woods',
       friends: ['Millie', 'Scoop', 'Niko'], // These will end up being IDs
     },
     {
+      type: 'move',
+      time: '6:15p',
+      location: 'Pen 9',
+      prevLocation: 'Kennel',
+      friends: [],
+    },
+    {
+      type: 'move',
+      time: '6:42p',
+      location: 'Kennel',
+      prevLocation: 'Pen 9',
+      friends: [],
+    },
+    {
       type: 'walk',
-      time: '4/5/2023 7:00p',
+      time: '7:00p',
       location: 'across woods',
       friends: [],
     },
