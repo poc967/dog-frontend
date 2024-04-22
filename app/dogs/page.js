@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 
 // components
 import LevelIndicator from '../components/LevelIndicator';
+import MoveDog from '../components/MoveDog';
 import { devices } from '../constants/constants';
 import Link from 'next/link';
 
@@ -75,7 +76,7 @@ let dogs = [
     image: '/dog.png',
   },
   {
-    id: '123456',
+    id: '12345600',
     name: 'Pumpkin',
     location: 'Kennel',
     level1: 'green',
@@ -108,13 +109,15 @@ const SearchWrapper = styled.div`
     margin-bottom: 0.5rem;
   }
 `;
+
 const Dogs = () => {
   const [domSize, setDomSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
   const [includeButtonNames, setIncludeButtonNames] = useState(false);
-  const router = useRouter();
+  const [moveDogModalOpen, setMoveDogModalOpen] = useState(false);
+  const [selectedDogs, setSelectedDogs] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -139,8 +142,28 @@ const Dogs = () => {
     }
   }, [domSize]);
 
+  const toggleModalOpen = () => {
+    setMoveDogModalOpen(!moveDogModalOpen);
+  };
+
+  const handleSelectDog = (dog, event) => {
+    switch (event.target.checked) {
+      case true:
+        setSelectedDogs([...selectedDogs, dog]);
+        break;
+      case false:
+        setSelectedDogs(
+          selectedDogs.filter((selectedDog) => selectedDog.id != dog.id)
+        );
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Wrapper>
+      <MoveDog isOpen={moveDogModalOpen} toggleOpen={toggleModalOpen} />
       <InputWrapper>
         <ButtonGroup
           className="bp5-monospace-text"
@@ -181,6 +204,8 @@ const Dogs = () => {
             small={true}
             outlined={true}
             fill={!includeButtonNames}
+            disabled={selectedDogs.length == 0}
+            onClick={() => toggleModalOpen()}
           />
           <Button
             text={includeButtonNames ? 'Start walk' : null}
@@ -214,7 +239,10 @@ const Dogs = () => {
           {dogs.map((dog, index) => (
             <tr key={index}>
               <td>
-                <Checkbox />
+                <Checkbox
+                  onChange={(e) => handleSelectDog(dog, e)}
+                  checked={selectedDogs[dog.id]}
+                />
               </td>
               <td>
                 <Link href={`/dogs/${dog.id}`}>{dog.name}</Link>
