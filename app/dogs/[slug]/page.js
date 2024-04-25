@@ -91,12 +91,15 @@ let dog = {
       location: 'Kennel',
       prevLocation: 'Pen 9',
       friends: [],
+      behaviorNote: ['Tried to jump out of Pen 9 and was close'],
     },
     {
       type: 'walk',
       time: '7:00p',
       location: 'across woods',
       friends: [],
+      behaviorNote:
+        'Has been chewing on sticks a lot and seems to get agressive toward passing cars on the street.',
     },
   ],
 };
