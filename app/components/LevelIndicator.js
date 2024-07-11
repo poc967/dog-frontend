@@ -9,17 +9,19 @@ const Container = styled.div`
 `;
 
 const HalfOne = styled.div`
-  width: 50%;
-  height: 100%;
+  width: 10px;
+  height: 20px;
   background-color: ${(props) => props.color || '#BF4F74'};
-  border-radius: 3px 0px 0px 3px;
+  border-radius: 25px 0px 0px 25px;
+  transform: rotate(45deg) translate(0px, -5px);
 `;
 
 const HalfTwo = styled.div`
-  width: 50%;
-  height: 100%;
+  width: 10px;
+  height: 20px;
   background-color: ${(props) => props.color || '#BF4F74'};
-  border-radius: 0px 3px 3px 0px;
+  border-radius: 0px 25px 25px 0px;
+  transform: rotate(45deg) translate(2px, 2px);
 `;
 
 const LevelIndicator = (props) => {

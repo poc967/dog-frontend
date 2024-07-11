@@ -1,13 +1,16 @@
 import { HTMLTable } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { Icon } from '@blueprintjs/core';
+import { getLocalTime } from '../helpers/helpers';
 
 const Table = styled(HTMLTable)`
   width: 100%;
 `;
 
 const ActivityHistory = (props) => {
-  let activityHistory = props.dog.activity_history;
+  let activityHistory = props.dog.dog.activity_history;
+  console.log(JSON.stringify(activityHistory));
+
   return (
     <Table className="bp5-html-table" striped={true}>
       <thead>
@@ -20,30 +23,36 @@ const ActivityHistory = (props) => {
       </thead>
       <tbody>
         {activityHistory
-          .sort((a, b) => b.time - a.time)
-          .map((activity, index) => (
-            <tr key={index}>
-              <td>{activity.time}</td>
-              <td>
-                {activity.type == 'move' ? (
-                  <div>
-                    <span>{activity.prevLocation + ' '}</span>
-                    <Icon
-                      icon="arrow-right"
-                      intent={
-                        activity.location == 'Kennel' ? 'danger' : 'success'
-                      }
-                    />
-                    <span>{' ' + activity.location}</span>
-                  </div>
-                ) : (
-                  activity.type
-                )}
-              </td>
-              {/* <td>{activity.location}</td> */}
-              <td>{activity.friends.join(', ')}</td>
-            </tr>
-          ))}
+          ? activityHistory
+              .sort((a, b) => b.time - a.time)
+              .map((activity, index) => (
+                <tr key={index}>
+                  <td>{getLocalTime(activity.time)}</td>
+                  <td>
+                    {activity.activity == 'move' ? (
+                      <div>
+                        <span>{activity.previous_location.name + ' '}</span>
+                        <Icon
+                          icon="arrow-right"
+                          intent={
+                            activity.location.name == 'Kennel'
+                              ? 'danger'
+                              : 'success'
+                          }
+                        />
+                        <span>{' ' + activity.location.name}</span>
+                      </div>
+                    ) : (
+                      <span>{`${activity.activity} - ${activity.location.name}`}</span>
+                    )}
+                  </td>
+                  {/* <td>{activity.location}</td> */}
+                  <td>
+                    {activity.friends.map((friend) => friend.name).join(', ')}
+                  </td>
+                </tr>
+              ))
+          : null}
       </tbody>
     </Table>
   );

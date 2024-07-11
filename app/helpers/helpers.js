@@ -32,3 +32,22 @@ export function toSnakeCase(string) {
   let lowered = string.toLowerCase();
   return lowered.replace(' ', '_');
 }
+
+export function getLocalTime(timestamp) {
+  const date = new Date(timestamp);
+
+  // Extract the local time components
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, 0);
+
+  // Determine AM/PM and adjust hours
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // The hour '0' should be '12'
+  hours = String(hours);
+
+  // Format the local time as a string in 12-hour format
+  const localTime = `${hours}:${minutes} ${ampm}`;
+
+  return localTime;
+}

@@ -1,158 +1,39 @@
-'use client';
+'use server';
 
-import styled from 'styled-components';
-import { Tabs, Tab, Breadcrumb, Breadcrumbs } from '@blueprintjs/core';
-import { useState } from 'react';
-import { DOG_HEADER_TABS } from '../../constants/constants';
-import { toSnakeCase } from '@/app/helpers/helpers';
+import SingleDog from '@/app/components/SingleDog';
 
-// components
-import DogHeaderCard from '../../components/DogHeaderCard';
-import DogDetailTab from '@/app/components/DogDetailTab';
-import ActivityHistory from '@/app/components/ActivityHistory';
-import BehaviorNotes from '@/app/components/BehaviorNotes';
-import QRCode from '@/app/components/QRCode';
-import { devices } from '@/app/constants/constants';
+async function getDog(params) {
+  'use server';
+  const res = await fetch(`http://localhost:8080/dog/${params.slug}`, {
+    cache: 'no-store',
+  });
 
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 35vw;
-  margin: 0 auto;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  if (!res.ok) {
+    // This will activate the closest `error.js` Error Boundary
+    throw new Error('Failed to fetch data');
+  }
 
-  @media ${devices['2xl']} {
-    width: 45vw;
-  }
-  @media ${devices.xl} {
-    width: 45vw;
-  }
-  @media ${devices.lg} {
-    width: 80vw;
-  }
-  @media ${devices.md} {
-    width: 95vw;
-  }
-  @media ${devices.xs} {
-    width: 95vw;
-  }
-  @media ${devices.sm} {
-    width: 95vw;
-  }
-`;
+  return res.json();
+}
 
-const StyledTabs = styled(Tabs)`
-  ul {
-    overflow-y: scroll;
-  }
-`;
+async function getActivity(params) {
+  const res = await fetch(`http://localhost:8080/activity/${params.slug}`, {
+    cache: 'no-store',
+  });
 
-let dog = {
-  id: '123456',
-  name: 'Bolognese',
-  location: 'Kennel',
-  level1: 'green',
-  level2: 'yellow',
-  image: '/dog.png',
-  details: {
-    alerts: [
-      { data: 'Close guillotine', priority: 'danger' },
-      { data: 'Can escape pen 8', priority: 'good' },
-      { data: 'Likes cheese', priority: 'good' },
-      { data: 'Doesnt like woods', priority: 'info' },
-    ],
-    diet: [{ data: 'ID Only', priority: 'danger' }],
-    behavior: [
-      { data: 'Doesnt like dark', priority: 'danger' },
-      { data: 'good boy!', priority: 'good' },
-    ],
-    friends: [],
-    medical: [{ data: 'Spay on 2/1', priority: 'info' }],
-    misc: [],
-  },
-  activity_history: [
-    {
-      type: 'walk',
-      time: '4:55p',
-      location: 'side woods',
-      friends: ['Millie', 'Scoop', 'Niko'], // These will end up being IDs
-    },
-    {
-      type: 'move',
-      time: '6:15p',
-      location: 'Pen 9',
-      prevLocation: 'Kennel',
-      friends: [],
-    },
-    {
-      type: 'move',
-      time: '6:42p',
-      location: 'Kennel',
-      prevLocation: 'Pen 9',
-      friends: [],
-      behaviorNote: ['Tried to jump out of Pen 9 and was close'],
-    },
-    {
-      type: 'walk',
-      time: '7:00p',
-      location: 'across woods',
-      friends: [],
-      behaviorNote:
-        'Has been chewing on sticks a lot and seems to get agressive toward passing cars on the street.',
-    },
-  ],
+  if (!res.ok) {
+    // This will activate the closest `error.js` Error Boundary
+    throw new Error('Failed to fetch data');
+  }
+
+  return res.json();
+}
+
+const SingleDogContainer = async ({ params }) => {
+  let data = await getDog(params);
+  let activityData = await getActivity(params);
+  data['dog']['activity_history'] = activityData.message;
+  return <SingleDog dog={data} getDog={getDog} />;
 };
 
-const tabComponentMap = {
-  details: DogDetailTab, // Map tab name to component
-  activity_history: ActivityHistory,
-  behavior_notes: BehaviorNotes,
-  qr_code: QRCode,
-};
-
-const TabPanelRenderer = ({ tabName, dog }) => {
-  const Component = tabComponentMap[toSnakeCase(tabName)]; // Get the component based on tab name
-  return Component ? <Component dog={dog} /> : null;
-};
-
-const renderCurrentBreadcrumb = ({ text, ...restProps }) => {
-  return <Breadcrumb {...restProps}>{text}</Breadcrumb>;
-};
-
-const Home = () => {
-  const [currentSelectedTab, setCurrentSelectedTab] = useState('details');
-
-  const breadCrumbs = [{ href: '/dogs/', text: 'Dogs' }, { text: dog.name }];
-
-  return (
-    <main>
-      <Wrapper className="bp5-monospace-text">
-        <div style={{ marginBottom: '0.5rem' }}>
-          <Breadcrumbs
-            currentBreadcrumbRenderer={renderCurrentBreadcrumb}
-            items={breadCrumbs}
-          />
-        </div>
-        <DogHeaderCard dog={dog} />
-        <StyledTabs
-          selectedTabId={currentSelectedTab}
-          className="bp5-monospace-text"
-          onChange={(e) => setCurrentSelectedTab(e)}
-          style={{ overflowY: 'scroll' }}
-        >
-          {DOG_HEADER_TABS.map((tab) => (
-            <Tab
-              key={tab}
-              id={tab.toLocaleLowerCase()}
-              title={tab}
-              panel={<TabPanelRenderer tabName={tab} dog={dog} />}
-            />
-          ))}
-        </StyledTabs>
-      </Wrapper>
-    </main>
-  );
-};
-
-export default Home;
+export default SingleDogContainer;

@@ -1,5 +1,7 @@
 'use client';
 
+import axios from 'axios';
+
 import {
   Button,
   Checkbox,
@@ -14,6 +16,7 @@ import { useState, useEffect } from 'react';
 // components
 import LevelIndicator from '../components/LevelIndicator';
 import MoveDog from '../components/MoveDog';
+import EndWalk from '../components/EndWalk';
 import { devices } from '../constants/constants';
 import Link from 'next/link';
 
@@ -44,46 +47,6 @@ const Wrapper = styled.div`
     width: 95vw;
   }
 `;
-
-let dogs = [
-  {
-    id: '12345',
-    name: 'Bolognese',
-    location: 'Kennel',
-    level1: 'green',
-    level2: 'yellow',
-    image: '/dog.png',
-  },
-  {
-    id: '123457',
-    name: 'Scoop',
-    location: 'Kennel',
-    level1: 'green',
-    image: '/dog.png',
-  },
-  {
-    id: '12345678',
-    name: 'Niko',
-    location: 'Kennel',
-    level1: 'blue',
-    image: '/dog.png',
-  },
-  {
-    id: '123456',
-    name: 'Millie',
-    location: 'Kennel',
-    level1: 'yellow',
-    image: '/dog.png',
-  },
-  {
-    id: '12345600',
-    name: 'Pumpkin',
-    location: 'Kennel',
-    level1: 'green',
-    level2: 'yellow',
-    image: '/dog.png',
-  },
-];
 
 const StyledTable = styled(HTMLTable)`
   border: solid #e5e7eb 1px;
@@ -117,7 +80,15 @@ const Dogs = () => {
   });
   const [includeButtonNames, setIncludeButtonNames] = useState(false);
   const [moveDogModalOpen, setMoveDogModalOpen] = useState(false);
+  const [endWalkModalOpen, setEndWalkModalOpen] = useState(false);
   const [selectedDogs, setSelectedDogs] = useState([]);
+  const [fetchingDogs, setFetchingDogs] = useState(false);
+  const [dogs, setDogs] = useState([]);
+  const [selectedDog, setSelectedDog] = useState(null);
+  const [endingWalkDog, setEndingWalkDog] = useState('');
+  const [modalType, setModalType] = useState(null);
+  const [newLocation, setNewLocation] = useState(null);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -142,8 +113,63 @@ const Dogs = () => {
     }
   }, [domSize]);
 
-  const toggleModalOpen = () => {
-    setMoveDogModalOpen(!moveDogModalOpen);
+  useEffect(() => {
+    async function fetchDogs() {
+      let res = await axios.get('http://localhost:8080/dog');
+      setDogs(res.data.message);
+    }
+
+    fetchDogs();
+  }, []);
+
+  useEffect(() => {
+    async function fetchLocations() {
+      let res = await fetch(`http://localhost:8080/settings/location`, {
+        cache: 'no-store',
+      });
+      let locations = await res.json();
+      setLocations(locations.data);
+    }
+
+    fetchLocations();
+  }, []);
+
+  const toggleModalOpen = async (type) => {
+    if (!moveDogModalOpen == true) {
+      await setModalType(type);
+    } else {
+      setModalType(null);
+    }
+    await setMoveDogModalOpen(!moveDogModalOpen);
+  };
+
+  const submitEndWalk = async (dogToUpdate) => {
+    await setEndingWalkDog(dogToUpdate._id);
+    let data = {
+      dogIds: [dogToUpdate._id],
+    };
+    let res = await axios.put(
+      'http://localhost:8080/activity/complete-walk',
+      data
+    );
+
+    if (res.status == 200) {
+      await setDogs(
+        dogs.map((dog) => {
+          return dog._id == dogToUpdate._id
+            ? {
+                ...dog,
+                isWalking: false,
+                location: {
+                  ...res.data.data.location,
+                  name: res.data.data.location.name,
+                },
+              }
+            : dog;
+        })
+      );
+      await setEndingWalkDog('');
+    }
   };
 
   const handleSelectDog = (dog, event) => {
@@ -161,9 +187,58 @@ const Dogs = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    let dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
+    let body = {
+      location: newLocation,
+      type: modalType,
+      dogs: dogIds,
+    };
+    let res = await axios.post('http://localhost:8080/activity', body);
+    if (res.status == 200) {
+      // update dogs state with new location
+      function getLocationObject() {
+        let obj = locations.find((item) => item._id === newLocation);
+        return obj;
+      }
+
+      let newLocationObj = getLocationObject();
+
+      await setDogs(
+        dogs.map((dog) => {
+          return dogIds.includes(dog._id)
+            ? {
+                ...dog,
+                isWalking: true,
+                location: newLocationObj,
+              }
+            : dog;
+        })
+      );
+
+      // close the modal
+      await toggleModalOpen();
+      // reset selected dogs
+      await setSelectedDogs([]);
+      await setNewLocation(null);
+    }
+  };
+
+  const handleLocationChange = async (e) => {
+    await setNewLocation(e.target.value);
+  };
+
   return (
     <Wrapper>
-      <MoveDog isOpen={moveDogModalOpen} toggleOpen={toggleModalOpen} />
+      <MoveDog
+        isOpen={moveDogModalOpen}
+        toggleOpen={toggleModalOpen}
+        type={modalType}
+        selectedDogs={selectedDogs}
+        handleLocationChange={handleLocationChange}
+        handleSubmit={handleSubmit}
+        locations={locations}
+      />
       <InputWrapper>
         <ButtonGroup
           className="bp5-monospace-text"
@@ -205,7 +280,7 @@ const Dogs = () => {
             outlined={true}
             fill={!includeButtonNames}
             disabled={selectedDogs.length == 0}
-            onClick={() => toggleModalOpen()}
+            onClick={() => toggleModalOpen('move')}
           />
           <Button
             text={includeButtonNames ? 'Start walk' : null}
@@ -213,6 +288,8 @@ const Dogs = () => {
             small={true}
             outlined={true}
             fill={!includeButtonNames}
+            disabled={selectedDogs.length == 0}
+            onClick={() => toggleModalOpen('walk')}
           />
           <Button
             text={includeButtonNames ? 'New Behavior Note' : null}
@@ -220,6 +297,8 @@ const Dogs = () => {
             small={true}
             outlined={true}
             fill={!includeButtonNames}
+            disabled={selectedDogs.length == 0}
+            onClick={() => toggleModalOpen()}
           />
         </ButtonGroup>
       </InputWrapper>
@@ -232,32 +311,57 @@ const Dogs = () => {
               <th>Level</th>
               <th>Location</th>
               <th>Last Out</th>
+              <th></th>
             </tr>
           </thead>
         ) : null}
         <tbody>
-          {dogs.map((dog, index) => (
-            <tr key={index}>
-              <td>
-                <Checkbox
-                  onChange={(e) => handleSelectDog(dog, e)}
-                  checked={selectedDogs[dog.id]}
-                />
-              </td>
-              <td>
-                <Link href={`/dogs/${dog.id}`}>{dog.name}</Link>
-              </td>
-              <td valign="middle">
-                <LevelIndicator
-                  color1={dog.level1}
-                  color2={dog.level2}
-                  small={true}
-                />
-              </td>
-              <td>{dog.location}</td>
-              <td>2:15</td>
-            </tr>
-          ))}
+          {dogs.length !== 0
+            ? dogs.map((dog, index) => (
+                <tr key={index}>
+                  <td>
+                    <Checkbox
+                      onChange={(e) => handleSelectDog(dog, e)}
+                      checked={selectedDogs[dog._id]}
+                      disabled={dog.isWalking}
+                    />
+                  </td>
+                  <td>
+                    <Link href={`/dogs/${dog._id}`}>{dog.name}</Link>
+                  </td>
+                  <td valign="middle">
+                    <LevelIndicator
+                      color1={dog.level1}
+                      color2={dog.level2}
+                      small={true}
+                    />
+                  </td>
+                  <td>
+                    <span
+                      className={`${
+                        endingWalkDog == dog._id ? 'bp5-skeleton' : null
+                      }`}
+                    >
+                      {dog.location.name}
+                    </span>
+                  </td>
+                  <td>2:15</td>
+                  <td>
+                    {dog.isWalking ? (
+                      <Button
+                        text={includeButtonNames ? 'End walk' : null}
+                        icon="cross"
+                        small={true}
+                        outlined={true}
+                        fill={!includeButtonNames}
+                        onClick={() => submitEndWalk(dog)}
+                        intent="danger"
+                      />
+                    ) : null}
+                  </td>
+                </tr>
+              ))
+            : null}
         </tbody>
       </StyledTable>
     </Wrapper>

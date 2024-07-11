@@ -1,3 +1,5 @@
+'use client';
+
 import styled from 'styled-components';
 import {
   HTMLSelect,
@@ -5,10 +7,11 @@ import {
   Classes,
   Section,
   SectionCard,
-  Icon,
   Button,
+  Tag,
 } from '@blueprintjs/core';
 import { devices } from '../constants/constants';
+import { useState, useEffect } from 'react';
 
 const ModalWrapper = styled.div`
   left: calc(50vw - 17vw);
@@ -51,9 +54,88 @@ const StyledButton = styled(Button)`
   margin-right: 5px;
 `;
 
-const selectedDogs = ['Niko', 'Bolognese', 'Pumpkin'];
+const NamesContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  margin: 7px;
+`;
 
 const MoveDog = (props) => {
+  const { type, selectedDogs, handleSubmit, handleLocationChange, locations } =
+    props;
+
+  const NamesContainerFragment = (
+    <NamesContainer>
+      {selectedDogs
+        ? selectedDogs.map((d, index) => (
+            <Tag
+              intent="primary"
+              key={index}
+              large
+              style={{ marginLeft: '5px' }}
+            >
+              {d.name}
+            </Tag>
+          ))
+        : null}
+    </NamesContainer>
+  );
+
+  let content;
+  switch (type) {
+    case 'move':
+      content = (
+        <>
+          {NamesContainerFragment}
+          <HTMLSelect
+            minimal={true}
+            fill={true}
+            onChange={(e) => handleLocationChange(e)}
+          >
+            <option>Select Destination...</option>
+            {locations
+              .filter((location) => {
+                return !('walkable' in location) || location.walkable == false;
+              })
+              .map((location, index) => (
+                <option key={index} value={location._id}>
+                  {location.name}
+                </option>
+              ))}
+          </HTMLSelect>
+        </>
+      );
+      break;
+    case 'walk':
+      content = (
+        <>
+          {NamesContainerFragment}
+          <HTMLSelect
+            minimal={true}
+            fill={true}
+            onChange={(e) => handleLocationChange(e)}
+          >
+            <option>Walk Destination...</option>
+            {locations
+              .filter((location) => {
+                return location.walkable;
+              })
+              .map((location, index) => (
+                <option key={index} value={location._id}>
+                  {location.name}
+                </option>
+              ))}
+          </HTMLSelect>
+        </>
+      );
+      break;
+    default:
+      content = null;
+  }
+
   return (
     <Overlay2
       isOpen={props.isOpen}
@@ -64,7 +146,7 @@ const MoveDog = (props) => {
     >
       <ModalWrapper className="bp5-monospace-text">
         <Section
-          title={'Move Dog(s)'}
+          title={() => getTitle()}
           rightElement={
             <Button
               icon="cross"
@@ -74,29 +156,14 @@ const MoveDog = (props) => {
             />
           }
         >
-          <StyledSectionCard>
-            <HTMLSelect minimal={true} fill={true}>
-              <option>Pen 9</option>
-              <option>Pen 8</option>
-              <option>Pen 7</option>
-              <option>Pen 6</option>
-            </HTMLSelect>
-            <Icon
-              icon="arrow-down"
-              style={{ padding: '0.5rem' }}
-              intent="success"
-              size={20}
-            />
-            <HTMLSelect minimal={true} fill={true}>
-              <option>Select Destination...</option>
-              <option>Pen 9</option>
-              <option>Pen 8</option>
-              <option>Pen 7</option>
-              <option>Pen 6</option>
-            </HTMLSelect>
-          </StyledSectionCard>
+          <StyledSectionCard>{content}</StyledSectionCard>
           <SectionCard>
-            <StyledButton intent="primary" minimal={true} outlined={true}>
+            <StyledButton
+              intent="primary"
+              minimal={true}
+              outlined={true}
+              onClick={() => handleSubmit()}
+            >
               Submit
             </StyledButton>
             <StyledButton

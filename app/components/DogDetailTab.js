@@ -4,6 +4,8 @@ import {
   NonIdealState,
   Tag,
   Button,
+  Overlay2,
+  EditableText,
 } from '@blueprintjs/core';
 import { DETAIL_CATEGORIES, PRIORITIES } from '../constants/constants';
 import { useState } from 'react';
@@ -28,8 +30,15 @@ const Action = (
   />
 );
 
+const Modal = (
+  <Overlay2 isOpen={true} usePortal={true} canOutsideClickClose={true} onClose>
+    {/* <EditableText /> */}
+    <span>Test</span>
+  </Overlay2>
+);
+
 const DogDetailTab = (props) => {
-  const { dog } = props;
+  const { dog } = props.dog;
   const [alertsIsOpen, setAlertsIsOpen] = useState(true);
   const [dietIsOpen, setDietIsOpen] = useState(false);
   const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
@@ -85,23 +94,31 @@ const DogDetailTab = (props) => {
           title={tab}
           className="bp5-monospace-text"
           rightElement={
-            dog['details'][tab.toLocaleLowerCase()].length == 0
+            dog[tab.toLocaleLowerCase()].length == 0
               ? null
-              : getRightElement(dog['details'][tab.toLocaleLowerCase()].length)
+              : getRightElement(dog[tab.toLocaleLowerCase()].length)
           }
         >
           <SectionCard padded={true}>
-            {dog['details'][tab.toLocaleLowerCase()].length !== 0 ? (
+            {dog[tab.toLocaleLowerCase()].length !== 0 ? (
               <div>
-                {PRIORITIES.map((priority, index) => (
-                  <div key={index}>
-                    {dog['details'][tab.toLowerCase()]
-                      .filter((a) => a.priority === priority)
-                      .map((alert, index) =>
-                        alert ? <Tags key={index} alert={alert} /> : null
-                      )}
-                  </div>
-                ))}
+                <div>
+                  {PRIORITIES.map((priority, index) => (
+                    <div key={index}>
+                      {dog[tab.toLowerCase()]
+                        .filter((a) => a.priority === priority)
+                        .map((alert, index) =>
+                          alert ? <Tags key={index} alert={alert} /> : null
+                        )}
+                    </div>
+                  ))}
+                </div>
+                <Tag
+                  interactive
+                  style={{ marginBottom: '5px', marginLeft: '5px' }}
+                >
+                  Add
+                </Tag>
               </div>
             ) : (
               <NonIdealState title="Nothing to see here!" action={Action} />

@@ -1,4 +1,10 @@
-import { Card, Overlay2, OverlaysProvider, Classes } from '@blueprintjs/core';
+import {
+  Card,
+  Overlay2,
+  OverlaysProvider,
+  Classes,
+  Icon,
+} from '@blueprintjs/core';
 import Image from 'next/image';
 import styled from 'styled-components';
 import { useState } from 'react';
@@ -20,6 +26,7 @@ const ModalWrapper = styled.div`
 `;
 
 const DogHeaderCard = (props) => {
+  console.log(props.dog);
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleIsOpen = () => {
@@ -30,7 +37,7 @@ const DogHeaderCard = (props) => {
     <Card style={{ padding: '10px', marginBottom: '1rem' }}>
       <CardDataWrapper>
         <Image
-          src={props.dog.image}
+          src="/dog.png"
           width={115}
           height={115}
           style={{ borderRadius: '3px' }}
@@ -47,7 +54,7 @@ const DogHeaderCard = (props) => {
           >
             <ModalWrapper>
               <Image
-                src={props.dog.image}
+                src="/dog.png"
                 width={350}
                 height={350}
                 alt="image of dog"
@@ -56,11 +63,33 @@ const DogHeaderCard = (props) => {
           </Overlay2>
         </OverlaysProvider>
         <div style={{ paddingLeft: '15px' }}>
-          <h3 className="bp5-heading bp5-monospace-text">{props.dog.name}</h3>
-          <LevelIndicator color1={props.dog.level1} color2={props.dog.level2} />
-          <h4 className="bp5-heading bp5-monospace-text">
-            location: {props.dog.location}
-          </h4>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <h3
+              className="bp5-heading bp5-monospace-text"
+              style={{ marginRight: '7px' }}
+            >
+              {props.dog.dog.name}
+            </h3>
+            <LevelIndicator
+              color1={props.dog.dog.level1}
+              color2={props.dog.dog.level2}
+            />
+          </div>
+          <Icon
+            icon="map-marker"
+            style={{ paddingRight: '5px' }}
+            intent="danger"
+          />
+          <span className="bp5-monospace-text" style={{ size: '1.5rem' }}>
+            {props.dog.dog.location.name}
+          </span>
         </div>
       </CardDataWrapper>
     </Card>
