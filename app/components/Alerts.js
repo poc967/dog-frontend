@@ -54,48 +54,15 @@ const StyledButton = styled(Button)`
   margin-right: 5px;
 `;
 
-const NamesContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  width: 100%;
-  margin: 7px;
-`;
-
 const MoveDog = (props) => {
-  const {
-    type,
-    selectedDogs,
-    handleSubmit,
-    handleLocationChange,
-    locations,
-    handleBehaviorNoteChange,
-  } = props;
-
-  const NamesContainerFragment = (
-    <NamesContainer>
-      {selectedDogs
-        ? selectedDogs.map((d, index) => (
-            <Tag
-              intent="primary"
-              key={index}
-              large
-              style={{ marginLeft: '5px' }}
-            >
-              {d.name}
-            </Tag>
-          ))
-        : null}
-    </NamesContainer>
-  );
+  const { type, selectedDogs, handleSubmit, handleLocationChange, locations } =
+    props;
 
   let content;
   switch (type) {
     case 'move':
       content = (
         <>
-          {NamesContainerFragment}
           <HTMLSelect
             minimal={true}
             fill={true}
@@ -112,40 +79,6 @@ const MoveDog = (props) => {
                 </option>
               ))}
           </HTMLSelect>
-        </>
-      );
-      break;
-    case 'walk':
-      content = (
-        <>
-          {NamesContainerFragment}
-          <HTMLSelect
-            minimal={true}
-            fill={true}
-            onChange={(e) => handleLocationChange(e)}
-          >
-            <option>Walk Destination...</option>
-            {locations
-              .filter((location) => {
-                return location.walkable;
-              })
-              .map((location, index) => (
-                <option key={index} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-          </HTMLSelect>
-        </>
-      );
-      break;
-    case 'behaviorNote':
-      content = (
-        <>
-          {NamesContainerFragment}
-          <textarea
-            class="bp5-input bp5-fill"
-            onChange={(e) => handleBehaviorNoteChange(e)}
-          ></textarea>
         </>
       );
       break;

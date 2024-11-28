@@ -89,6 +89,7 @@ const Dogs = () => {
   const [modalType, setModalType] = useState(null);
   const [newLocation, setNewLocation] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [behaviorNote, setBehaviorNote] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -193,6 +194,7 @@ const Dogs = () => {
       location: newLocation,
       type: modalType,
       dogs: dogIds,
+      note: behaviorNote ? behaviorNote : null,
     };
     let res = await axios.post('http://localhost:8080/activity', body);
     if (res.status == 200) {
@@ -209,7 +211,7 @@ const Dogs = () => {
           return dogIds.includes(dog._id)
             ? {
                 ...dog,
-                isWalking: true,
+                isWalking: modalType === 'walk' ? true : false,
                 location: newLocationObj,
               }
             : dog;
@@ -228,6 +230,25 @@ const Dogs = () => {
     await setNewLocation(e.target.value);
   };
 
+  const handleBehaviorNoteChange = async (e) => {
+    await setBehaviorNote(e.target.value);
+  };
+
+  const handleSubmitNote = async (e) => {
+    let dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
+    let body = {
+      text: behaviorNote,
+      dogs: dogIds,
+    };
+
+    let res = await axios.post('http://localhost:8080/note/new');
+
+    // close the modal
+    await toggleModalOpen();
+
+    await setSelectedDogs([]);
+  };
+
   return (
     <Wrapper>
       <MoveDog
@@ -238,6 +259,8 @@ const Dogs = () => {
         handleLocationChange={handleLocationChange}
         handleSubmit={handleSubmit}
         locations={locations}
+        handleBehaviorNoteChange={handleBehaviorNoteChange}
+        handleSubmitNote={handleSubmitNote}
       />
       <InputWrapper>
         <ButtonGroup
@@ -298,7 +321,7 @@ const Dogs = () => {
             outlined={true}
             fill={!includeButtonNames}
             disabled={selectedDogs.length == 0}
-            onClick={() => toggleModalOpen()}
+            onClick={() => toggleModalOpen('behaviorNote')}
           />
         </ButtonGroup>
       </InputWrapper>
