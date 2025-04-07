@@ -95,21 +95,14 @@ const Home = () => {
               alt="image of dog"
             />
             <div style={{ paddingLeft: '15px' }}>
-              <h3 className="bp5-heading bp5-monospace-text">{dog.name}</h3>
+              <h3 className="bp5-heading">{dog.name}</h3>
               <LevelIndicator color1={dog.level1} color2={dog.level2} />
-              <h4 className="bp5-heading bp5-monospace-text">
-                location: {dog.location}
-              </h4>
+              <h4 className="bp5-heading">location: {dog.location}</h4>
             </div>
           </CardDataWrapper>
         </Card>
 
-        <Tabs
-          selectedTabId="det"
-          className="bp5-monospace-text"
-          fill={false}
-          large={false}
-        >
+        <Tabs selectedTabId="det" fill={false} large={false}>
           <Tab id="det" title="Details" />
           <Tab title="Activity History" />
           <Tab title="Behavior Notes" />
@@ -121,7 +114,6 @@ const Home = () => {
             key={index}
             collapsible={true}
             title={tab}
-            className="bp5-monospace-text"
             rightElement={
               dog['details'][tab.toLocaleLowerCase()].length == 0
                 ? null

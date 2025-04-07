@@ -8,11 +8,10 @@ const Table = styled(HTMLTable)`
 `;
 
 const ActivityHistory = (props) => {
-  let activityHistory = props.dog.dog.activity_history;
-  console.log(JSON.stringify(activityHistory));
+  let activityHistory = props.activityHistory.message;
 
   return (
-    <Table className="bp5-html-table" striped={true}>
+    <Table className="bp5-html-table">
       <thead>
         <tr>
           <th>Time</th>

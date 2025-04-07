@@ -33,6 +33,16 @@ export function toSnakeCase(string) {
   return lowered.replace(' ', '_');
 }
 
+export function getLocalDate(timestamp) {
+  const date = new Date(timestamp);
+
+  const day = date.getDate();
+  const month = date.getMonth();
+  const year = date.getFullYear();
+
+  return `${month + 1}/${day}/${year}`;
+}
+
 export function getLocalTime(timestamp) {
   const date = new Date(timestamp);
 

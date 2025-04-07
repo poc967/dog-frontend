@@ -94,7 +94,7 @@ const MoveDog = (props) => {
       canOutsideClickClose={true}
       onClose={props.toggleOpen}
     >
-      <ModalWrapper className="bp5-monospace-text">
+      <ModalWrapper>
         <Section
           title={() => getTitle()}
           rightElement={

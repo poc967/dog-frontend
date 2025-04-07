@@ -60,7 +60,7 @@ const EndWalk = (props) => {
       canOutsideClickClose={true}
       onClose={props.toggleOpen}
     >
-      <ModalWrapper className="bp5-monospace-text">
+      <ModalWrapper>
         <span>{props.walkId}</span>
         <Section
           title={'End Walk'}

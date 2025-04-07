@@ -10,7 +10,7 @@ const Tags = (props) => {
       style={{ marginBottom: '5px', marginLeft: '5px' }}
       minimal={true}
     >
-      <span className="bp5-monospace-text">{alert.text}</span>
+      <span>{alert.text}</span>
       <button>
         <Icon icon="small-cross" />
       </button>

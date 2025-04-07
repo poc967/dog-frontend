@@ -188,42 +188,54 @@ const Dogs = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (type) => {
+    let body;
     let dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
-    let body = {
-      location: newLocation,
-      type: modalType,
-      dogs: dogIds,
-      note: behaviorNote ? behaviorNote : null,
-    };
-    let res = await axios.post('http://localhost:8080/activity', body);
-    if (res.status == 200) {
-      // update dogs state with new location
-      function getLocationObject() {
-        let obj = locations.find((item) => item._id === newLocation);
-        return obj;
+
+    if (type === 'walk' || type === 'move') {
+      body = {
+        location: newLocation,
+        type: modalType,
+        dogs: dogIds,
+      };
+      let res = await axios.post('http://localhost:8080/activity', body);
+      if (res.status == 200) {
+        // update dogs state with new location
+        function getLocationObject() {
+          let obj = locations.find((item) => item._id === newLocation);
+          return obj;
+        }
+
+        let newLocationObj = getLocationObject();
+
+        await setDogs(
+          dogs.map((dog) => {
+            return dogIds.includes(dog._id)
+              ? {
+                  ...dog,
+                  isWalking: modalType === 'walk' ? true : false,
+                  location: newLocationObj,
+                }
+              : dog;
+          })
+        );
       }
-
-      let newLocationObj = getLocationObject();
-
-      await setDogs(
-        dogs.map((dog) => {
-          return dogIds.includes(dog._id)
-            ? {
-                ...dog,
-                isWalking: modalType === 'walk' ? true : false,
-                location: newLocationObj,
-              }
-            : dog;
-        })
-      );
-
-      // close the modal
-      await toggleModalOpen();
-      // reset selected dogs
-      await setSelectedDogs([]);
-      await setNewLocation(null);
     }
+
+    if (type === 'behaviorNote') {
+      body = {
+        dogs: dogIds,
+        text: behaviorNote,
+      };
+
+      let res = await axios.post('http://localhost:8080/note/new', body);
+    }
+
+    // close the modal
+    await toggleModalOpen();
+    // reset selected dogs
+    await setSelectedDogs([]);
+    await setNewLocation(null);
   };
 
   const handleLocationChange = async (e) => {
@@ -263,10 +275,7 @@ const Dogs = () => {
         handleSubmitNote={handleSubmitNote}
       />
       <InputWrapper>
-        <ButtonGroup
-          className="bp5-monospace-text"
-          style={{ minWidth: '12rem' }}
-        >
+        <ButtonGroup style={{ minWidth: '12rem' }}>
           <Button
             text={includeButtonNames ? 'Add Dog' : null}
             icon="plus"
@@ -286,16 +295,9 @@ const Dogs = () => {
       </InputWrapper>
       <InputWrapper>
         <SearchWrapper>
-          <InputGroup
-            className="bp5-monospace-text"
-            small={true}
-            placeholder="Search..."
-          />
+          <InputGroup small={true} placeholder="Search..." />
         </SearchWrapper>
-        <ButtonGroup
-          className="bp5-monospace-text"
-          style={{ minWidth: '12rem' }}
-        >
+        <ButtonGroup style={{ minWidth: '12rem' }}>
           <Button
             text={includeButtonNames ? 'Move dog(s)' : null}
             icon="changes"
@@ -325,7 +327,7 @@ const Dogs = () => {
           />
         </ButtonGroup>
       </InputWrapper>
-      <StyledTable className="bp5-monospace-text bp5-html-table-striped">
+      <StyledTable className="bp5-html-table-striped">
         {includeButtonNames ? (
           <thead>
             <tr>

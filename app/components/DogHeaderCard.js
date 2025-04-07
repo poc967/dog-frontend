@@ -26,7 +26,6 @@ const ModalWrapper = styled.div`
 `;
 
 const DogHeaderCard = (props) => {
-  console.log(props.dog);
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleIsOpen = () => {
@@ -71,15 +70,12 @@ const DogHeaderCard = (props) => {
               justifyContent: 'center',
             }}
           >
-            <h3
-              className="bp5-heading bp5-monospace-text"
-              style={{ marginRight: '7px' }}
-            >
-              {props.dog.dog.name}
+            <h3 className="bp5-heading" style={{ marginRight: '7px' }}>
+              {props.dog.name}
             </h3>
             <LevelIndicator
-              color1={props.dog.dog.level1}
-              color2={props.dog.dog.level2}
+              color1={props.dog.level1}
+              color2={props.dog.level2}
             />
           </div>
           <Icon
@@ -87,9 +83,7 @@ const DogHeaderCard = (props) => {
             style={{ paddingRight: '5px' }}
             intent="danger"
           />
-          <span className="bp5-monospace-text" style={{ size: '1.5rem' }}>
-            {props.dog.dog.location.name}
-          </span>
+          <span style={{ size: '1.5rem' }}>{props.dog.location.name}</span>
         </div>
       </CardDataWrapper>
     </Card>

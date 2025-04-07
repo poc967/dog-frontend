@@ -38,7 +38,7 @@ const Modal = (
 );
 
 const DogDetailTab = (props) => {
-  const { dog } = props.dog;
+  const { dog } = props;
   const [alertsIsOpen, setAlertsIsOpen] = useState(true);
   const [dietIsOpen, setDietIsOpen] = useState(false);
   const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
@@ -92,12 +92,12 @@ const DogDetailTab = (props) => {
             onToggle: functionMap[tab],
           }}
           title={tab}
-          className="bp5-monospace-text"
           rightElement={
             dog[tab.toLocaleLowerCase()].length == 0
               ? null
               : getRightElement(dog[tab.toLocaleLowerCase()].length)
           }
+          compact={true}
         >
           <SectionCard padded={true}>
             {dog[tab.toLocaleLowerCase()].length !== 0 ? (

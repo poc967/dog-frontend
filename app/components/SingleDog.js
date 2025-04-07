@@ -1,10 +1,11 @@
 'use client';
 
 import styled from 'styled-components';
-import { Tabs, Tab, Breadcrumb, Breadcrumbs } from '@blueprintjs/core';
-import { useState } from 'react';
+import { Tabs, Tab, Breadcrumb, Breadcrumbs, Spinner } from '@blueprintjs/core';
+import { use, useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
+import { createNote } from '../core/notes';
 
 // components
 import DogHeaderCard from '@/app/components/DogHeaderCard';
@@ -55,9 +56,26 @@ const tabComponentMap = {
   qr_code: QRCode,
 };
 
-const TabPanelRenderer = ({ tabName, dog }) => {
+const TabPanelRenderer = ({
+  tabName,
+  dog,
+  activityHistory,
+  notes,
+  handleChange,
+  handleSubmit,
+  newNote,
+}) => {
   const Component = tabComponentMap[toSnakeCase(tabName)]; // Get the component based on tab name
-  return Component ? <Component dog={dog} /> : null;
+  return Component ? (
+    <Component
+      dog={dog}
+      activityHistory={activityHistory}
+      notes={notes}
+      handleChange={handleChange}
+      handleSubmit={handleSubmit}
+      newNote={newNote}
+    />
+  ) : null;
 };
 
 const renderCurrentBreadcrumb = ({ text, ...restProps }) => {
@@ -65,13 +83,34 @@ const renderCurrentBreadcrumb = ({ text, ...restProps }) => {
 };
 
 const SingleDog = (props) => {
-  const { dog } = props;
   const [currentSelectedTab, setCurrentSelectedTab] = useState('details');
+  const [dog, setDog] = useState(props.dog.dog);
+  const [activityHistory, setActivityHistory] = useState(props.activityHistory);
+  const [notes, setNotes] = useState(props.notes);
+  const [newNote, setNewNote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const breadCrumbs = [
-    { href: '/dogs/', text: 'Dogs' },
-    { text: dog.dog.name },
-  ];
+  const breadCrumbs = [{ href: '/dogs/', text: 'Dogs' }, { text: dog.name }];
+
+  const handleChange = async (e) => {
+    console.log(e.target.value);
+
+    await setNewNote(e.target.value);
+  };
+
+  const handleSubmit = async () => {
+    console.log('submitting....', newNote);
+    if (newNote == '') {
+      return;
+    }
+
+    const dogs = [dog._id];
+    let res = await createNote(newNote, dogs);
+    let updatedNotes = [res, ...notes];
+    console.log(updatedNotes);
+    await setNotes(updatedNotes);
+    await setNewNote('');
+  };
 
   return (
     <main>
@@ -85,7 +124,6 @@ const SingleDog = (props) => {
         <DogHeaderCard dog={dog} />
         <StyledTabs
           selectedTabId={currentSelectedTab}
-          className="bp5-monospace-text"
           onChange={(e) => setCurrentSelectedTab(e)}
           style={{ overflowY: 'scroll' }}
         >
@@ -94,7 +132,17 @@ const SingleDog = (props) => {
               key={tab}
               id={tab.toLocaleLowerCase()}
               title={tab}
-              panel={<TabPanelRenderer tabName={tab} dog={dog} />}
+              panel={
+                <TabPanelRenderer
+                  tabName={tab}
+                  dog={dog}
+                  activityHistory={activityHistory}
+                  notes={notes}
+                  handleChange={handleChange}
+                  handleSubmit={handleSubmit}
+                  newNote={newNote}
+                />
+              }
             />
           ))}
         </StyledTabs>

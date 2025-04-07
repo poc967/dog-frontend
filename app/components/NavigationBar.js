@@ -10,7 +10,7 @@ const NavBar = styled(Navbar)`
 
 const NavigationBar = (props) => {
   return (
-    <NavBar className="bp5-monospace-text">
+    <NavBar>
       <Navbar.Group align={Alignment.LEFT}>
         <Navbar.Heading>Baypath Volunteer Ops</Navbar.Heading>
       </Navbar.Group>
