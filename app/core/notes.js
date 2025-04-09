@@ -18,7 +18,6 @@ export async function createNote(text, dogs) {
     dogs,
     text: text,
   };
-  console.log(body);
   const res = await fetch('http://localhost:8080/note/new', {
     method: 'POST',
     body: JSON.stringify(body),

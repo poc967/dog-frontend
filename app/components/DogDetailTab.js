@@ -19,7 +19,7 @@ const getRightElement = (num) => (
   </Tag>
 );
 
-const Action = (
+const Action = (tab, toggleAlertsModalIsOpen) => (
   <Button
     icon="add"
     text="Add something"
@@ -27,6 +27,7 @@ const Action = (
     outlined
     small
     intent="none"
+    onClick={() => toggleAlertsModalIsOpen(tab)}
   />
 );
 
@@ -38,7 +39,7 @@ const Modal = (
 );
 
 const DogDetailTab = (props) => {
-  const { dog } = props;
+  const { dog, toggleAlertsModalIsOpen } = props;
   const [alertsIsOpen, setAlertsIsOpen] = useState(true);
   const [dietIsOpen, setDietIsOpen] = useState(false);
   const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
@@ -116,12 +117,16 @@ const DogDetailTab = (props) => {
                 <Tag
                   interactive
                   style={{ marginBottom: '5px', marginLeft: '5px' }}
+                  onClick={() => toggleAlertsModalIsOpen(tab)}
                 >
                   Add
                 </Tag>
               </div>
             ) : (
-              <NonIdealState title="Nothing to see here!" action={Action} />
+              <NonIdealState
+                title="Nothing to see here!"
+                action={Action(tab, toggleAlertsModalIsOpen)}
+              />
             )}
           </SectionCard>
         </Section>

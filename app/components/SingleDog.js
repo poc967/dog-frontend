@@ -6,6 +6,7 @@ import { use, useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
 import { createNote } from '../core/notes';
+import { createAlert } from '../core/dogApi';
 
 // components
 import DogHeaderCard from '@/app/components/DogHeaderCard';
@@ -14,6 +15,7 @@ import ActivityHistory from '@/app/components/ActivityHistory';
 import BehaviorNotes from '@/app/components/BehaviorNotes';
 import QRCode from '@/app/components/QRCode';
 import { devices } from '@/app/constants/constants';
+import AddAlert from './WhiteboardModal';
 
 const Wrapper = styled.div`
   display: flex;
@@ -64,6 +66,7 @@ const TabPanelRenderer = ({
   handleChange,
   handleSubmit,
   newNote,
+  toggleAlertsModalIsOpen,
 }) => {
   const Component = tabComponentMap[toSnakeCase(tabName)]; // Get the component based on tab name
   return Component ? (
@@ -74,6 +77,7 @@ const TabPanelRenderer = ({
       handleChange={handleChange}
       handleSubmit={handleSubmit}
       newNote={newNote}
+      toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
     />
   ) : null;
 };
@@ -89,17 +93,31 @@ const SingleDog = (props) => {
   const [notes, setNotes] = useState(props.notes);
   const [newNote, setNewNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [newWhiteBoardNote, setNewWhiteboardNote] = useState('');
+  const [newWhiteBoardCategory, setNewWhiteBoardCategory] = useState('');
+  const [addAlertOpen, setAddAlertOpen] = useState(false);
+  const [tab, setTab] = useState(null);
 
   const breadCrumbs = [{ href: '/dogs/', text: 'Dogs' }, { text: dog.name }];
 
   const handleChange = async (e) => {
-    console.log(e.target.value);
-
     await setNewNote(e.target.value);
   };
 
+  const toggleAlertsModalIsOpen = async (currentTab) => {
+    await setAddAlertOpen(!addAlertOpen);
+    await setTab(currentTab);
+  };
+
+  const handleNewNoteChange = async (e) => {
+    await setNewWhiteboardNote(e.target.value);
+  };
+
+  const handleNewCategoryChange = async (e) => {
+    await setNewWhiteBoardCategory(e.target.value);
+  };
+
   const handleSubmit = async () => {
-    console.log('submitting....', newNote);
     if (newNote == '') {
       return;
     }
@@ -107,14 +125,39 @@ const SingleDog = (props) => {
     const dogs = [dog._id];
     let res = await createNote(newNote, dogs);
     let updatedNotes = [res, ...notes];
-    console.log(updatedNotes);
     await setNotes(updatedNotes);
     await setNewNote('');
+  };
+
+  const handleSubmitWhiteBoard = async () => {
+    let res = await createAlert(
+      dog._id,
+      newWhiteBoardNote,
+      newWhiteBoardCategory,
+      tab
+    );
+    let newDog = dog;
+    newDog[tab.toLocaleLowerCase()] = res.message;
+    await setDog(newDog);
+    await setNewWhiteboardNote('');
+    await setNewWhiteBoardCategory('');
+    await toggleAlertsModalIsOpen();
+    await setTab(null);
   };
 
   return (
     <main>
       <Wrapper className="bp5-monospace-text">
+        <AddAlert
+          isOpen={addAlertOpen}
+          toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
+          handleNewNoteChange={handleNewNoteChange}
+          handleNewCategoryChange={handleNewCategoryChange}
+          newWhiteBoardNote={newWhiteBoardNote}
+          newWhiteBoardCategory={newWhiteBoardCategory}
+          handleSubmitWhiteBoard={handleSubmitWhiteBoard}
+          tab={tab}
+        />
         <div style={{ marginBottom: '0.5rem' }}>
           <Breadcrumbs
             currentBreadcrumbRenderer={renderCurrentBreadcrumb}
@@ -141,6 +184,9 @@ const SingleDog = (props) => {
                   handleChange={handleChange}
                   handleSubmit={handleSubmit}
                   newNote={newNote}
+                  toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
+                  handleNewNoteChange={handleNewNoteChange}
+                  handleNewCategoryChange={handleNewCategoryChange}
                 />
               }
             />
