@@ -25,3 +25,26 @@ export async function getActivity(slug) {
 
   return res.json();
 }
+
+export async function createAlert(dogId, alert, category, tab) {
+  const body = {
+    data: alert,
+    priority: category,
+  };
+  const res = await fetch(
+    `http://localhost:8080/dog/${dogId}/${tab.toLowerCase()}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error('Failed to POST data');
+  }
+
+  return res.json();
+}
