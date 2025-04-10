@@ -6,7 +6,7 @@ import { use, useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
 import { createNote } from '../core/notes';
-import { createAlert } from '../core/dogApi';
+import { createAlert, deleteWhiteboard } from '../core/dogApi';
 
 // components
 import DogHeaderCard from '@/app/components/DogHeaderCard';
@@ -67,6 +67,7 @@ const TabPanelRenderer = ({
   handleSubmit,
   newNote,
   toggleAlertsModalIsOpen,
+  submitDeleteWhiteboard,
 }) => {
   const Component = tabComponentMap[toSnakeCase(tabName)]; // Get the component based on tab name
   return Component ? (
@@ -78,6 +79,7 @@ const TabPanelRenderer = ({
       handleSubmit={handleSubmit}
       newNote={newNote}
       toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
+      submitDeleteWhiteboard={submitDeleteWhiteboard}
     />
   ) : null;
 };
@@ -145,6 +147,15 @@ const SingleDog = (props) => {
     await setTab(null);
   };
 
+  const submitDeleteWhiteboard = async (alertId, tab) => {
+    let res = await deleteWhiteboard(dog._id, tab, alertId);
+    let newDog = {
+      ...dog,
+      [tab.toLowerCase()]: res.message,
+    };
+    await setDog(newDog);
+  };
+
   return (
     <main>
       <Wrapper className="bp5-monospace-text">
@@ -187,6 +198,7 @@ const SingleDog = (props) => {
                   toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
                   handleNewNoteChange={handleNewNoteChange}
                   handleNewCategoryChange={handleNewCategoryChange}
+                  submitDeleteWhiteboard={submitDeleteWhiteboard}
                 />
               }
             />

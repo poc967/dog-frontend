@@ -48,3 +48,21 @@ export async function createAlert(dogId, alert, category, tab) {
 
   return res.json();
 }
+
+export async function deleteWhiteboard(dogId, type, id) {
+  const res = await fetch(
+    `http://localhost:8080/dog/${dogId}/${type.toLowerCase()}/${id}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error('Failed to DELETE data');
+  }
+
+  return res.json();
+}

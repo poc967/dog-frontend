@@ -39,7 +39,7 @@ const Modal = (
 );
 
 const DogDetailTab = (props) => {
-  const { dog, toggleAlertsModalIsOpen } = props;
+  const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard } = props;
   const [alertsIsOpen, setAlertsIsOpen] = useState(true);
   const [dietIsOpen, setDietIsOpen] = useState(false);
   const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
@@ -96,7 +96,11 @@ const DogDetailTab = (props) => {
           rightElement={
             dog[tab.toLocaleLowerCase()].length == 0
               ? null
-              : getRightElement(dog[tab.toLocaleLowerCase()].length)
+              : getRightElement(
+                  dog[tab.toLocaleLowerCase()].filter(
+                    (alert) => !alert.isDeleted
+                  ).length
+                )
           }
           compact={true}
         >
@@ -109,7 +113,14 @@ const DogDetailTab = (props) => {
                       {dog[tab.toLowerCase()]
                         .filter((a) => a.priority === priority)
                         .map((alert, index) =>
-                          alert ? <Tags key={index} alert={alert} /> : null
+                          alert && !alert.isDeleted ? (
+                            <Tags
+                              key={index}
+                              alert={alert}
+                              tab={tab}
+                              submitDeleteWhiteboard={submitDeleteWhiteboard}
+                            />
+                          ) : null
                         )}
                     </div>
                   ))}
