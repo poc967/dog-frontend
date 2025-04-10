@@ -2,7 +2,7 @@ import { Tag, Icon } from '@blueprintjs/core';
 import { mapColorToIntent } from '../helpers/helpers';
 
 const Tags = (props) => {
-  const { alert } = props;
+  const { alert, tab, submitDeleteWhiteboard } = props;
   return (
     <Tag
       onRemove={true}
@@ -12,7 +12,10 @@ const Tags = (props) => {
     >
       <span>{alert.text}</span>
       <button>
-        <Icon icon="small-cross" />
+        <Icon
+          icon="small-cross"
+          onClick={() => submitDeleteWhiteboard(alert._id, tab)}
+        />
       </button>
     </Tag>
   );
