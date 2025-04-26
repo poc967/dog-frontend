@@ -1,9 +1,12 @@
 'use server';
 
 export async function getDog(slug) {
-  const res = await fetch(`http://localhost:8080/dog/${slug}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `https://still-garden-24228-4efab39a388a.herokuapp.com/dog/${slug}`,
+    {
+      cache: 'no-store',
+    }
+  );
 
   if (!res.ok) {
     // This will activate the closest `error.js` Error Boundary
@@ -14,9 +17,12 @@ export async function getDog(slug) {
 }
 
 export async function getActivity(slug) {
-  const res = await fetch(`http://localhost:8080/activity/${slug}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `https://still-garden-24228-4efab39a388a.herokuapp.com/activity/${slug}`,
+    {
+      cache: 'no-store',
+    }
+  );
 
   if (!res.ok) {
     // This will activate the closest `error.js` Error Boundary
@@ -32,7 +38,7 @@ export async function createAlert(dogId, alert, category, tab) {
     priority: category,
   };
   const res = await fetch(
-    `http://localhost:8080/dog/${dogId}/${tab.toLowerCase()}`,
+    `https://still-garden-24228-4efab39a388a.herokuapp.com/dog/${dogId}/${tab.toLowerCase()}`,
     {
       method: 'POST',
       headers: {
@@ -51,7 +57,7 @@ export async function createAlert(dogId, alert, category, tab) {
 
 export async function deleteWhiteboard(dogId, type, id) {
   const res = await fetch(
-    `http://localhost:8080/dog/${dogId}/${type.toLowerCase()}/${id}`,
+    `https://still-garden-24228-4efab39a388a.herokuapp.com/dog/${dogId}/${type.toLowerCase()}/${id}`,
     {
       method: 'DELETE',
       headers: {

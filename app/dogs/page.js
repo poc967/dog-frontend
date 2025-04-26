@@ -116,7 +116,9 @@ const Dogs = () => {
 
   useEffect(() => {
     async function fetchDogs() {
-      let res = await axios.get('http://localhost:8080/dog');
+      let res = await axios.get(
+        'https://still-garden-24228-4efab39a388a.herokuapp.com/dog'
+      );
       setDogs(res.data.message);
     }
 
@@ -125,9 +127,12 @@ const Dogs = () => {
 
   useEffect(() => {
     async function fetchLocations() {
-      let res = await fetch(`http://localhost:8080/settings/location`, {
-        cache: 'no-store',
-      });
+      let res = await fetch(
+        `https://still-garden-24228-4efab39a388a.herokuapp.com/settings/location`,
+        {
+          cache: 'no-store',
+        }
+      );
       let locations = await res.json();
       setLocations(locations.data);
     }
@@ -150,7 +155,7 @@ const Dogs = () => {
       dogIds: [dogToUpdate._id],
     };
     let res = await axios.put(
-      'http://localhost:8080/activity/complete-walk',
+      'https://still-garden-24228-4efab39a388a.herokuapp.com/activity/complete-walk',
       data
     );
 
@@ -198,7 +203,10 @@ const Dogs = () => {
         type: modalType,
         dogs: dogIds,
       };
-      let res = await axios.post('http://localhost:8080/activity', body);
+      let res = await axios.post(
+        'https://still-garden-24228-4efab39a388a.herokuapp.com/activity',
+        body
+      );
       if (res.status == 200) {
         // update dogs state with new location
         function getLocationObject() {
@@ -228,7 +236,10 @@ const Dogs = () => {
         text: behaviorNote,
       };
 
-      let res = await axios.post('http://localhost:8080/note/new', body);
+      let res = await axios.post(
+        'https://still-garden-24228-4efab39a388a.herokuapp.com/note/new',
+        body
+      );
     }
 
     // close the modal
@@ -253,7 +264,9 @@ const Dogs = () => {
       dogs: dogIds,
     };
 
-    let res = await axios.post('http://localhost:8080/note/new');
+    let res = await axios.post(
+      'https://still-garden-24228-4efab39a388a.herokuapp.com/note/new'
+    );
 
     // close the modal
     await toggleModalOpen();
