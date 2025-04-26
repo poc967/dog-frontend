@@ -74,10 +74,10 @@ const SearchWrapper = styled.div`
 `;
 
 const Dogs = () => {
-  const [domSize, setDomSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+  // const [domSize, setDomSize] = useState({
+  //   width: window.innerWidth,
+  //   height: window.innerHeight,
+  // });
   const [includeButtonNames, setIncludeButtonNames] = useState(false);
   const [moveDogModalOpen, setMoveDogModalOpen] = useState(false);
   const [endWalkModalOpen, setEndWalkModalOpen] = useState(false);
@@ -91,28 +91,28 @@ const Dogs = () => {
   const [locations, setLocations] = useState([]);
   const [behaviorNote, setBehaviorNote] = useState(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setDomSize({ width: window.innerWidth, height: window.innerHeight });
-    };
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     setDomSize({ width: window.innerWidth, height: window.innerHeight });
+  //   };
 
-    window.addEventListener('resize', handleResize);
+  //   window.addEventListener('resize', handleResize);
 
-    // Cleanup function to remove event listener when component unmounts
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+  //   // Cleanup function to remove event listener when component unmounts
+  //   return () => {
+  //     window.removeEventListener('resize', handleResize);
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    // Check if the DOM size meets a certain condition
-    if (domSize.width > 910) {
-      // Update component state accordingly
-      setIncludeButtonNames(true);
-    } else {
-      setIncludeButtonNames(false);
-    }
-  }, [domSize]);
+  // useEffect(() => {
+  //   // Check if the DOM size meets a certain condition
+  //   if (domSize.width > 910) {
+  //     // Update component state accordingly
+  //     setIncludeButtonNames(true);
+  //   } else {
+  //     setIncludeButtonNames(false);
+  //   }
+  // }, [domSize]);
 
   useEffect(() => {
     async function fetchDogs() {

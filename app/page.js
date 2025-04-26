@@ -13,7 +13,7 @@ import {
   Tab,
 } from '@blueprintjs/core';
 import { useState } from 'react';
-import { DETAIL_TABS } from './constants/constants';
+import { DETAIL_CATEGORIES } from './constants/constants';
 
 // components
 import Tags from './components/Tag';
@@ -109,7 +109,7 @@ const Home = () => {
           <Tab title="QR Code" />
         </Tabs>
 
-        {DETAIL_TABS.map((tab, index) => (
+        {DETAIL_CATEGORIES.map((tab, index) => (
           <Section
             key={index}
             collapsible={true}
