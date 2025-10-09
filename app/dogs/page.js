@@ -8,6 +8,7 @@ import {
   HTMLTable,
   InputGroup,
   ButtonGroup,
+  Spinner,
 } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
@@ -17,7 +18,9 @@ import { useState, useEffect } from 'react';
 import LevelIndicator from '../components/LevelIndicator';
 import MoveDog from '../components/MoveDog';
 import EndWalk from '../components/EndWalk';
+import AddDog from '../components/AddDog';
 import { devices } from '../constants/constants';
+import { API_ENDPOINTS } from '../config/api';
 import Link from 'next/link';
 
 const Wrapper = styled.div`
@@ -73,6 +76,14 @@ const SearchWrapper = styled.div`
   }
 `;
 
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  width: 100%;
+`;
+
 const Dogs = () => {
   // const [domSize, setDomSize] = useState({
   //   width: window.innerWidth,
@@ -81,6 +92,7 @@ const Dogs = () => {
   const [includeButtonNames, setIncludeButtonNames] = useState(false);
   const [moveDogModalOpen, setMoveDogModalOpen] = useState(false);
   const [endWalkModalOpen, setEndWalkModalOpen] = useState(false);
+  const [addDogModalOpen, setAddDogModalOpen] = useState(false);
   const [selectedDogs, setSelectedDogs] = useState([]);
   const [fetchingDogs, setFetchingDogs] = useState(false);
   const [dogs, setDogs] = useState([]);
@@ -116,10 +128,15 @@ const Dogs = () => {
 
   useEffect(() => {
     async function fetchDogs() {
-      let res = await axios.get(
-        'https://still-garden-24228-4efab39a388a.herokuapp.com/dog'
-      );
-      setDogs(res.data.message);
+      setFetchingDogs(true);
+      try {
+        let res = await axios.get(API_ENDPOINTS.DOGS);
+        setDogs(res.data.message);
+      } catch (error) {
+        console.error('Error fetching dogs:', error);
+      } finally {
+        setFetchingDogs(false);
+      }
     }
 
     fetchDogs();
@@ -127,12 +144,9 @@ const Dogs = () => {
 
   useEffect(() => {
     async function fetchLocations() {
-      let res = await fetch(
-        `https://still-garden-24228-4efab39a388a.herokuapp.com/settings/location`,
-        {
-          cache: 'no-store',
-        }
-      );
+      let res = await fetch(API_ENDPOINTS.LOCATIONS, {
+        cache: 'no-store',
+      });
       let locations = await res.json();
       setLocations(locations.data);
     }
@@ -154,10 +168,7 @@ const Dogs = () => {
     let data = {
       dogIds: [dogToUpdate._id],
     };
-    let res = await axios.put(
-      'https://still-garden-24228-4efab39a388a.herokuapp.com/activity/complete-walk',
-      data
-    );
+    let res = await axios.put(API_ENDPOINTS.COMPLETE_WALK, data);
 
     if (res.status == 200) {
       await setDogs(
@@ -203,10 +214,7 @@ const Dogs = () => {
         type: modalType,
         dogs: dogIds,
       };
-      let res = await axios.post(
-        'https://still-garden-24228-4efab39a388a.herokuapp.com/activity',
-        body
-      );
+      let res = await axios.post(API_ENDPOINTS.ACTIVITIES, body);
       if (res.status == 200) {
         // update dogs state with new location
         function getLocationObject() {
@@ -236,10 +244,7 @@ const Dogs = () => {
         text: behaviorNote,
       };
 
-      let res = await axios.post(
-        'https://still-garden-24228-4efab39a388a.herokuapp.com/note/new',
-        body
-      );
+      let res = await axios.post(API_ENDPOINTS.NOTES, body);
     }
 
     // close the modal
@@ -264,14 +269,42 @@ const Dogs = () => {
       dogs: dogIds,
     };
 
-    let res = await axios.post(
-      'https://still-garden-24228-4efab39a388a.herokuapp.com/note/new'
-    );
+    let res = await axios.post(API_ENDPOINTS.NOTES);
 
     // close the modal
     await toggleModalOpen();
 
     await setSelectedDogs([]);
+  };
+
+  const handleAddDog = async (dogData) => {
+    try {
+      const body = {
+        name: dogData.name,
+        level1: dogData.level1,
+        level2: dogData.level2,
+        location: dogData.location,
+        dob: dogData.dob,
+      };
+
+      const res = await axios.post(API_ENDPOINTS.DOGS, body);
+
+      if (res.status === 200 || res.status === 201) {
+        // Add the new dog to the dogs list (no await needed for state setters)
+        const { data } = res.data;
+        const newDog = data;
+        let prevDogs = [...dogs, newDog];
+        setDogs(prevDogs);
+
+        // Close the modal (no await needed for state setters)
+        setAddDogModalOpen(false);
+
+        // Show success message (optional)
+        console.log('Dog added successfully', res.data.data, dogs);
+      }
+    } catch (error) {
+      console.error('Error adding dog:', error);
+    }
   };
 
   return (
@@ -287,6 +320,12 @@ const Dogs = () => {
         handleBehaviorNoteChange={handleBehaviorNoteChange}
         handleSubmitNote={handleSubmitNote}
       />
+      <AddDog
+        isOpen={addDogModalOpen}
+        onClose={() => setAddDogModalOpen(false)}
+        onSubmit={handleAddDog}
+        locations={locations}
+      />
       <InputWrapper>
         <ButtonGroup style={{ minWidth: '12rem' }}>
           <Button
@@ -295,6 +334,7 @@ const Dogs = () => {
             small={true}
             outlined={true}
             fill={!includeButtonNames}
+            onClick={() => setAddDogModalOpen(true)}
           />
           <Button
             text={includeButtonNames ? 'Archive' : null}
@@ -354,52 +394,66 @@ const Dogs = () => {
           </thead>
         ) : null}
         <tbody>
-          {dogs.length !== 0
-            ? dogs.map((dog, index) => (
-                <tr key={index}>
-                  <td>
-                    <Checkbox
-                      onChange={(e) => handleSelectDog(dog, e)}
-                      checked={selectedDogs[dog._id]}
-                      disabled={dog.isWalking}
-                    />
-                  </td>
-                  <td>
-                    <Link href={`/dogs/${dog._id}`}>{dog.name}</Link>
-                  </td>
-                  <td valign="middle">
-                    <LevelIndicator
-                      color1={dog.level1}
-                      color2={dog.level2}
+          {fetchingDogs ? (
+            <tr>
+              <td colSpan={includeButtonNames ? 6 : 1}>
+                <LoadingContainer>
+                  <Spinner size={40} />
+                </LoadingContainer>
+              </td>
+            </tr>
+          ) : dogs.length !== 0 ? (
+            dogs.map((dog, index) => (
+              <tr key={index}>
+                <td>
+                  <Checkbox
+                    onChange={(e) => handleSelectDog(dog, e)}
+                    checked={selectedDogs[dog._id]}
+                    disabled={dog.isWalking}
+                  />
+                </td>
+                <td>
+                  <Link href={`/dogs/${dog._id}`}>{dog.name}</Link>
+                </td>
+                <td valign="middle">
+                  <LevelIndicator
+                    color1={dog.level1}
+                    color2={dog.level2}
+                    small={true}
+                  />
+                </td>
+                <td>
+                  <span
+                    className={`${
+                      endingWalkDog == dog._id ? 'bp5-skeleton' : null
+                    }`}
+                  >
+                    {dog.location.name}
+                  </span>
+                </td>
+                <td>2:15</td>
+                <td>
+                  {dog.isWalking ? (
+                    <Button
+                      text={includeButtonNames ? 'End walk' : null}
+                      icon="cross"
                       small={true}
+                      outlined={true}
+                      fill={!includeButtonNames}
+                      onClick={() => submitEndWalk(dog)}
+                      intent="danger"
                     />
-                  </td>
-                  <td>
-                    <span
-                      className={`${
-                        endingWalkDog == dog._id ? 'bp5-skeleton' : null
-                      }`}
-                    >
-                      {dog.location.name}
-                    </span>
-                  </td>
-                  <td>2:15</td>
-                  <td>
-                    {dog.isWalking ? (
-                      <Button
-                        text={includeButtonNames ? 'End walk' : null}
-                        icon="cross"
-                        small={true}
-                        outlined={true}
-                        fill={!includeButtonNames}
-                        onClick={() => submitEndWalk(dog)}
-                        intent="danger"
-                      />
-                    ) : null}
-                  </td>
-                </tr>
-              ))
-            : null}
+                  ) : null}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={includeButtonNames ? 6 : 1}>
+                <LoadingContainer>No dogs found</LoadingContainer>
+              </td>
+            </tr>
+          )}
         </tbody>
       </StyledTable>
     </Wrapper>

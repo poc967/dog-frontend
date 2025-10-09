@@ -1,6 +1,5 @@
 @import '~@blueprintjs/core/lib/css/blueprint.css';
 @import '~@blueprintjs/icons/lib/css/blueprint-icons.css';
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -22,12 +21,6 @@
 
 :root {
   font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
-}
-
-.source-code-pro {
-  font-family: "Source Code Pro", serif;
-  font-optical-sizing: auto;
-  font-style: normal;
 }
 
 body {

@@ -158,7 +158,7 @@ const SingleDog = (props) => {
 
   return (
     <main>
-      <Wrapper className="bp5-monospace-text">
+      <Wrapper>
         <AddAlert
           isOpen={addAlertOpen}
           toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
