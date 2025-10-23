@@ -234,16 +234,16 @@ const UserProfileContent = () => {
     role: 'volunteer',
   });
 
-  // Create toaster instance inside component to avoid SSR issues
-  const AppToaster = React.useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return Toaster.create({
-        className: 'recipe-toaster',
-        position: Position.TOP,
-      });
-    }
-    return null;
-  }, []);
+  // // Create toaster instance inside component to avoid SSR issues
+  // const AppToaster = React.useMemo(() => {
+  //   if (typeof window !== 'undefined') {
+  //     return Toaster.create({
+  //       className: 'recipe-toaster',
+  //       position: Position.TOP,
+  //     });
+  //   }
+  //   return null;
+  // }, []);
 
   // Get user initials for avatar
   const getInitials = (username, email) => {
@@ -327,23 +327,23 @@ const UserProfileContent = () => {
 
   // Handle user creation
   const handleCreateUser = async () => {
-    if (!isFormValid()) {
-      AppToaster?.show({
-        message:
-          'Please fill in all fields. Password must be at least 6 characters.',
-        intent: Intent.WARNING,
-      });
-      return;
-    }
+    // if (!isFormValid()) {
+    //   AppToaster?.show({
+    //     message:
+    //       'Please fill in all fields. Password must be at least 6 characters.',
+    //     intent: Intent.WARNING,
+    //   });
+    //   return;
+    // }
 
     setCreating(true);
     try {
       const response = await createUser(newUser, token);
 
-      AppToaster?.show({
-        message: `User ${newUser.username} created successfully!`,
-        intent: Intent.SUCCESS,
-      });
+      // AppToaster?.show({
+      //   message: `User ${newUser.username} created successfully!`,
+      //   intent: Intent.SUCCESS,
+      // });
 
       // Reset form
       setNewUser({
@@ -356,10 +356,10 @@ const UserProfileContent = () => {
     } catch (error) {
       console.error('Error creating user:', error);
       const errorMessage = error.message || 'Failed to create user';
-      AppToaster?.show({
-        message: errorMessage,
-        intent: Intent.DANGER,
-      });
+      // AppToaster?.show({
+      //   message: errorMessage,
+      //   intent: Intent.DANGER,
+      // });
     } finally {
       setCreating(false);
     }
