@@ -414,7 +414,7 @@ const DogsContent = () => {
               <th>Name</th>
               <th>Level</th>
               <th>Location</th>
-              <th>Last Out</th>
+              {/* <th>Last Out</th> */}
               <th></th>
             </tr>
           </thead>
@@ -457,7 +457,7 @@ const DogsContent = () => {
                     {dog.location.name}
                   </span>
                 </td>
-                <td>2:15</td>
+                {/* <td>2:15</td> */}
                 <td>
                   {dog.isWalking ? (
                     <Button

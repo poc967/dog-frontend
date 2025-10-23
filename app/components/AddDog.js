@@ -239,14 +239,14 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
                 ))}
               </HTMLSelect>
             </FormGroup>
-            <FormGroup label="Picture" labelFor="picture">
+            {/* <FormGroup label="Picture" labelFor="picture">
               <FileInput
                 id="imageName"
                 name="imageName"
                 text={dogData.imageName || 'Choose file...'}
                 onInputChange={(e) => handleImageUpload(e)}
               />
-            </FormGroup>
+            </FormGroup> */}
           </StyledSectionCard>
 
           <SectionCard>
