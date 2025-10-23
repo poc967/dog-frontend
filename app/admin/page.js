@@ -158,16 +158,16 @@ const AdminContent = () => {
     role: 'volunteer',
   });
 
-  // Create toaster instance inside component to avoid SSR issues
-  const AppToaster = React.useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return Toaster.create({
-        className: 'admin-toaster',
-        position: Position.TOP,
-      });
-    }
-    return null;
-  }, []);
+  // // Create toaster instance inside component to avoid SSR issues
+  // const AppToaster = React.useMemo(() => {
+  //   if (typeof window !== 'undefined') {
+  //     return Toaster.create({
+  //       className: 'admin-toaster',
+  //       position: Position.TOP,
+  //     });
+  //   }
+  //   return null;
+  // }, []);
 
   const fetchUsers = async () => {
     try {
@@ -204,12 +204,12 @@ const AdminContent = () => {
     try {
       const response = await axios.post(API_ENDPOINTS.AUTH.REGISTER, newUser);
 
-      // Show success toast
-      AppToaster?.show({
-        message: `User ${newUser.username} created successfully!`,
-        intent: Intent.SUCCESS,
-        timeout: 3000,
-      });
+      // // Show success toast
+      // AppToaster?.show({
+      //   message: `User ${newUser.username} created successfully!`,
+      //   intent: Intent.SUCCESS,
+      //   timeout: 3000,
+      // });
 
       setSuccess('User created successfully');
       setNewUser({ username: '', email: '', password: '', role: 'volunteer' });
@@ -225,12 +225,12 @@ const AdminContent = () => {
     try {
       await axios.put(API_ENDPOINTS.AUTH.USER_BY_ID(userId), { role: newRole });
 
-      // Show success toast
-      AppToaster?.show({
-        message: `User role updated to ${newRole} successfully!`,
-        intent: Intent.SUCCESS,
-        timeout: 3000,
-      });
+      // // Show success toast
+      // AppToaster?.show({
+      //   message: `User role updated to ${newRole} successfully!`,
+      //   intent: Intent.SUCCESS,
+      //   timeout: 3000,
+      // });
 
       setSuccess('User role updated successfully');
       fetchUsers(); // Refresh the users list
