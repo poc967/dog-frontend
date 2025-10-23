@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 // components
-import NavigationBar from './components/NavigationBar';
+import ClientLayout from './components/ClientLayout';
 
 export const metadata = {
   title: 'Baypath Volunteer Ops',
@@ -21,8 +21,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <StyledComponentsRegistry>
-          <NavigationBar />
-          {children}
+          <ClientLayout>{children}</ClientLayout>
         </StyledComponentsRegistry>
       </body>
     </html>

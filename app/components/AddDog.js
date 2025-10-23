@@ -14,6 +14,7 @@ import {
 import { devices } from '../constants/constants';
 import { COLOR_OPTIONS } from '../config/api';
 import { useState } from 'react';
+import { FileInput } from '@blueprintjs/core';
 
 const ModalWrapper = styled.div`
   left: calc(50vw - 17vw);
@@ -63,6 +64,8 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
     level2: 'yellow',
     location: '',
     dob: '',
+    image: null,
+    imageName: '',
   });
 
   const handleInputChange = (field, value) => {
@@ -87,6 +90,7 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
       level2: 'yellow',
       location: '',
       dob: '',
+      image: null,
     });
   };
 
@@ -98,8 +102,39 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
       level2: 'yellow',
       location: '',
       dob: '',
+      image: null,
     });
     onClose();
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    const name = file.name;
+    setDogData((prev) => ({
+      ...prev,
+      imageName: name,
+    }));
+    let data = new FormData();
+    data.append('file', file);
+
+    const config = {
+      url: `${process.env.REACT_APP_base_url}/user/upload-profile-image`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      data,
+    };
+
+    const res = await axios(config);
+    if (res.status === 200) {
+      setDogData((prev) => ({
+        ...prev,
+        image: res.data.imageUrl,
+      }));
+    } else {
+      alert('Image upload failed');
+    }
   };
 
   return (
@@ -203,6 +238,14 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
                   </option>
                 ))}
               </HTMLSelect>
+            </FormGroup>
+            <FormGroup label="Picture" labelFor="picture">
+              <FileInput
+                id="imageName"
+                name="imageName"
+                text={dogData.imageName || 'Choose file...'}
+                onInputChange={(e) => handleImageUpload(e)}
+              />
             </FormGroup>
           </StyledSectionCard>
 
