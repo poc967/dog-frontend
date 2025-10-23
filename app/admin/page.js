@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   HTMLTable,
@@ -145,12 +145,6 @@ const SectionTitle = styled.h3`
   }
 `;
 
-// Create a toaster instance
-const AppToaster = Toaster.create({
-  className: 'admin-toaster',
-  position: Position.TOP,
-});
-
 const AdminContent = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +157,17 @@ const AdminContent = () => {
     password: '',
     role: 'volunteer',
   });
+
+  // Create toaster instance inside component to avoid SSR issues
+  const AppToaster = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return Toaster.create({
+        className: 'admin-toaster',
+        position: Position.TOP,
+      });
+    }
+    return null;
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -200,7 +205,7 @@ const AdminContent = () => {
       const response = await axios.post(API_ENDPOINTS.AUTH.REGISTER, newUser);
 
       // Show success toast
-      AppToaster.show({
+      AppToaster?.show({
         message: `User ${newUser.username} created successfully!`,
         intent: Intent.SUCCESS,
         timeout: 3000,
@@ -221,7 +226,7 @@ const AdminContent = () => {
       await axios.put(API_ENDPOINTS.AUTH.USER_BY_ID(userId), { role: newRole });
 
       // Show success toast
-      AppToaster.show({
+      AppToaster?.show({
         message: `User role updated to ${newRole} successfully!`,
         intent: Intent.SUCCESS,
         timeout: 3000,

@@ -223,12 +223,6 @@ const ButtonContainer = styled.div`
   }
 `;
 
-// Create a toaster instance
-const AppToaster = Toaster.create({
-  className: 'recipe-toaster',
-  position: Position.TOP,
-});
-
 const UserProfileContent = () => {
   const { user, loading, token } = useAuth();
   const [showCreateUser, setShowCreateUser] = useState(false);
@@ -239,6 +233,17 @@ const UserProfileContent = () => {
     password: '',
     role: 'volunteer',
   });
+
+  // Create toaster instance inside component to avoid SSR issues
+  const AppToaster = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return Toaster.create({
+        className: 'recipe-toaster',
+        position: Position.TOP,
+      });
+    }
+    return null;
+  }, []);
 
   // Get user initials for avatar
   const getInitials = (username, email) => {
@@ -323,7 +328,7 @@ const UserProfileContent = () => {
   // Handle user creation
   const handleCreateUser = async () => {
     if (!isFormValid()) {
-      AppToaster.show({
+      AppToaster?.show({
         message:
           'Please fill in all fields. Password must be at least 6 characters.',
         intent: Intent.WARNING,
@@ -335,7 +340,7 @@ const UserProfileContent = () => {
     try {
       const response = await createUser(newUser, token);
 
-      AppToaster.show({
+      AppToaster?.show({
         message: `User ${newUser.username} created successfully!`,
         intent: Intent.SUCCESS,
       });
@@ -351,7 +356,7 @@ const UserProfileContent = () => {
     } catch (error) {
       console.error('Error creating user:', error);
       const errorMessage = error.message || 'Failed to create user';
-      AppToaster.show({
+      AppToaster?.show({
         message: errorMessage,
         intent: Intent.DANGER,
       });
