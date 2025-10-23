@@ -5,8 +5,8 @@ import { Tabs, Tab, Breadcrumb, Breadcrumbs, Spinner } from '@blueprintjs/core';
 import { use, useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
-import { createNote } from '../core/notes';
-import { createAlert, deleteWhiteboard } from '../core/dogApi';
+import { createNote } from '../api/notes';
+import { createAlert, deleteWhiteboard } from '../api/dog';
 
 // components
 import DogHeaderCard from '@/app/components/DogHeaderCard';
@@ -125,7 +125,7 @@ const SingleDog = (props) => {
     }
 
     const dogs = [dog._id];
-    let res = await createNote(newNote, dogs);
+    let res = await createNote(newNote, dogs, props.token);
     let updatedNotes = [res, ...notes];
     await setNotes(updatedNotes);
     await setNewNote('');
@@ -136,7 +136,8 @@ const SingleDog = (props) => {
       dog._id,
       newWhiteBoardNote,
       newWhiteBoardCategory,
-      tab
+      tab,
+      props.token
     );
     let newDog = dog;
     newDog[tab.toLocaleLowerCase()] = res.message;
@@ -148,7 +149,7 @@ const SingleDog = (props) => {
   };
 
   const submitDeleteWhiteboard = async (alertId, tab) => {
-    let res = await deleteWhiteboard(dog._id, tab, alertId);
+    let res = await deleteWhiteboard(dog._id, tab, alertId, props.token);
     let newDog = {
       ...dog,
       [tab.toLowerCase()]: res.message,

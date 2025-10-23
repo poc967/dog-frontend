@@ -1,7 +1,9 @@
 import { Tag, Icon } from '@blueprintjs/core';
 import { mapColorToIntent } from '../helpers/helpers';
+import { useAuth } from '../contexts/AuthContext';
 
 const Tags = (props) => {
+  const { hasRole } = useAuth();
   const { alert, tab, submitDeleteWhiteboard } = props;
   return (
     <Tag
@@ -11,12 +13,14 @@ const Tags = (props) => {
       minimal={true}
     >
       <span>{alert.text}</span>
-      <button>
-        <Icon
-          icon="small-cross"
-          onClick={() => submitDeleteWhiteboard(alert._id, tab)}
-        />
-      </button>
+      {hasRole('admin') ? (
+        <button>
+          <Icon
+            icon="small-cross"
+            onClick={() => submitDeleteWhiteboard(alert._id, tab)}
+          />
+        </button>
+      ) : null}
     </Tag>
   );
 };

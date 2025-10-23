@@ -1,7 +1,5 @@
 'use client';
 
-import axios from 'axios';
-
 import {
   Button,
   Checkbox,
@@ -19,8 +17,18 @@ import LevelIndicator from '../components/LevelIndicator';
 import MoveDog from '../components/MoveDog';
 import EndWalk from '../components/EndWalk';
 import AddDog from '../components/AddDog';
+import ProtectedRoute from '../components/ProtectedRoute';
 import { devices } from '../constants/constants';
 import { API_ENDPOINTS } from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
+import { getDogs } from '../api/dog';
+import {
+  createDog,
+  moveOrWalkDogs,
+  completeWalk,
+  createBehaviorNote,
+  getLocations,
+} from '../api/dog-actions';
 import Link from 'next/link';
 
 const Wrapper = styled.div`
@@ -84,7 +92,8 @@ const LoadingContainer = styled.div`
   width: 100%;
 `;
 
-const Dogs = () => {
+const DogsContent = () => {
+  const { hasRole, token } = useAuth();
   // const [domSize, setDomSize] = useState({
   //   width: window.innerWidth,
   //   height: window.innerHeight,
@@ -128,10 +137,12 @@ const Dogs = () => {
 
   useEffect(() => {
     async function fetchDogs() {
+      if (!token) return; // Wait for token to be available
+
       setFetchingDogs(true);
       try {
-        let res = await axios.get(API_ENDPOINTS.DOGS);
-        setDogs(res.data.message);
+        const data = await getDogs(token);
+        setDogs(data.message);
       } catch (error) {
         console.error('Error fetching dogs:', error);
       } finally {
@@ -140,19 +151,22 @@ const Dogs = () => {
     }
 
     fetchDogs();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     async function fetchLocations() {
-      let res = await fetch(API_ENDPOINTS.LOCATIONS, {
-        cache: 'no-store',
-      });
-      let locations = await res.json();
-      setLocations(locations.data);
+      if (!token) return; // Wait for token to be available
+
+      try {
+        const data = await getLocations(token);
+        setLocations(data.data);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
     }
 
     fetchLocations();
-  }, []);
+  }, [token]);
 
   const toggleModalOpen = async (type) => {
     if (!moveDogModalOpen == true) {
@@ -164,28 +178,32 @@ const Dogs = () => {
   };
 
   const submitEndWalk = async (dogToUpdate) => {
-    await setEndingWalkDog(dogToUpdate._id);
-    let data = {
-      dogIds: [dogToUpdate._id],
-    };
-    let res = await axios.put(API_ENDPOINTS.COMPLETE_WALK, data);
+    setEndingWalkDog(dogToUpdate._id);
 
-    if (res.status == 200) {
-      await setDogs(
+    try {
+      const data = {
+        dogIds: [dogToUpdate._id],
+      };
+      const res = await completeWalk(data, token);
+
+      setDogs(
         dogs.map((dog) => {
           return dog._id == dogToUpdate._id
             ? {
                 ...dog,
                 isWalking: false,
                 location: {
-                  ...res.data.data.location,
-                  name: res.data.data.location.name,
+                  ...res.data.location,
+                  name: res.data.location.name,
                 },
               }
             : dog;
         })
       );
-      await setEndingWalkDog('');
+      setEndingWalkDog('');
+    } catch (error) {
+      console.error('Error ending walk:', error);
+      setEndingWalkDog('');
     }
   };
 
@@ -205,17 +223,18 @@ const Dogs = () => {
   };
 
   const handleSubmit = async (type) => {
-    let body;
-    let dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
+    const dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
 
-    if (type === 'walk' || type === 'move') {
-      body = {
-        location: newLocation,
-        type: modalType,
-        dogs: dogIds,
-      };
-      let res = await axios.post(API_ENDPOINTS.ACTIVITIES, body);
-      if (res.status == 200) {
+    try {
+      if (type === 'walk' || type === 'move') {
+        const body = {
+          location: newLocation,
+          type: modalType,
+          dogs: dogIds,
+        };
+
+        await moveOrWalkDogs(body, token);
+
         // update dogs state with new location
         function getLocationObject() {
           let obj = locations.find((item) => item._id === newLocation);
@@ -224,7 +243,7 @@ const Dogs = () => {
 
         let newLocationObj = getLocationObject();
 
-        await setDogs(
+        setDogs(
           dogs.map((dog) => {
             return dogIds.includes(dog._id)
               ? {
@@ -236,15 +255,17 @@ const Dogs = () => {
           })
         );
       }
-    }
 
-    if (type === 'behaviorNote') {
-      body = {
-        dogs: dogIds,
-        text: behaviorNote,
-      };
+      if (type === 'behaviorNote') {
+        const body = {
+          dogs: dogIds,
+          text: behaviorNote,
+        };
 
-      let res = await axios.post(API_ENDPOINTS.NOTES, body);
+        await createBehaviorNote(body, token);
+      }
+    } catch (error) {
+      console.error('Error submitting:', error);
     }
 
     // close the modal
@@ -263,18 +284,22 @@ const Dogs = () => {
   };
 
   const handleSubmitNote = async (e) => {
-    let dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
-    let body = {
-      text: behaviorNote,
-      dogs: dogIds,
-    };
+    try {
+      const dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
+      const body = {
+        text: behaviorNote,
+        dogs: dogIds,
+      };
 
-    let res = await axios.post(API_ENDPOINTS.NOTES);
+      await createBehaviorNote(body, token);
 
-    // close the modal
-    await toggleModalOpen();
+      // close the modal
+      toggleModalOpen();
 
-    await setSelectedDogs([]);
+      setSelectedDogs([]);
+    } catch (error) {
+      console.error('Error creating behavior note:', error);
+    }
   };
 
   const handleAddDog = async (dogData) => {
@@ -285,23 +310,20 @@ const Dogs = () => {
         level2: dogData.level2,
         location: dogData.location,
         dob: dogData.dob,
+        imageUrl: dogData.imageUrl,
       };
 
-      const res = await axios.post(API_ENDPOINTS.DOGS, body);
+      const newDog = await createDog(body, token);
 
-      if (res.status === 200 || res.status === 201) {
-        // Add the new dog to the dogs list (no await needed for state setters)
-        const { data } = res.data;
-        const newDog = data;
-        let prevDogs = [...dogs, newDog];
-        setDogs(prevDogs);
+      // Add the new dog to the dogs list
+      let prevDogs = [...dogs, newDog];
+      setDogs(prevDogs);
 
-        // Close the modal (no await needed for state setters)
-        setAddDogModalOpen(false);
+      // Close the modal
+      setAddDogModalOpen(false);
 
-        // Show success message (optional)
-        console.log('Dog added successfully', res.data.data, dogs);
-      }
+      // Show success message (optional)
+      console.log('Dog added successfully', newDog);
     } catch (error) {
       console.error('Error adding dog:', error);
     }
@@ -327,58 +349,62 @@ const Dogs = () => {
         locations={locations}
       />
       <InputWrapper>
-        <ButtonGroup style={{ minWidth: '12rem' }}>
-          <Button
-            text={includeButtonNames ? 'Add Dog' : null}
-            icon="plus"
-            small={true}
-            outlined={true}
-            fill={!includeButtonNames}
-            onClick={() => setAddDogModalOpen(true)}
-          />
-          <Button
-            text={includeButtonNames ? 'Archive' : null}
-            icon="archive"
-            small={true}
-            outlined={true}
-            fill={!includeButtonNames}
-            disabled={true}
-          />
-        </ButtonGroup>
+        {hasRole('staff') && (
+          <ButtonGroup style={{ minWidth: '12rem' }}>
+            <Button
+              text={includeButtonNames ? 'Add Dog' : null}
+              icon="plus"
+              small={true}
+              outlined={true}
+              fill={!includeButtonNames}
+              onClick={() => setAddDogModalOpen(true)}
+            />
+            <Button
+              text={includeButtonNames ? 'Archive' : null}
+              icon="archive"
+              small={true}
+              outlined={true}
+              fill={!includeButtonNames}
+              disabled={true}
+            />
+          </ButtonGroup>
+        )}
       </InputWrapper>
       <InputWrapper>
         <SearchWrapper>
           <InputGroup small={true} placeholder="Search..." />
         </SearchWrapper>
-        <ButtonGroup style={{ minWidth: '12rem' }}>
-          <Button
-            text={includeButtonNames ? 'Move dog(s)' : null}
-            icon="changes"
-            small={true}
-            outlined={true}
-            fill={!includeButtonNames}
-            disabled={selectedDogs.length == 0}
-            onClick={() => toggleModalOpen('move')}
-          />
-          <Button
-            text={includeButtonNames ? 'Start walk' : null}
-            icon="walk"
-            small={true}
-            outlined={true}
-            fill={!includeButtonNames}
-            disabled={selectedDogs.length == 0}
-            onClick={() => toggleModalOpen('walk')}
-          />
-          <Button
-            text={includeButtonNames ? 'New Behavior Note' : null}
-            icon="git-repo"
-            small={true}
-            outlined={true}
-            fill={!includeButtonNames}
-            disabled={selectedDogs.length == 0}
-            onClick={() => toggleModalOpen('behaviorNote')}
-          />
-        </ButtonGroup>
+        {hasRole('staff') && (
+          <ButtonGroup style={{ minWidth: '12rem' }}>
+            <Button
+              text={includeButtonNames ? 'Move dog(s)' : null}
+              icon="changes"
+              small={true}
+              outlined={true}
+              fill={!includeButtonNames}
+              disabled={selectedDogs.length == 0}
+              onClick={() => toggleModalOpen('move')}
+            />
+            <Button
+              text={includeButtonNames ? 'Start walk' : null}
+              icon="walk"
+              small={true}
+              outlined={true}
+              fill={!includeButtonNames}
+              disabled={selectedDogs.length == 0}
+              onClick={() => toggleModalOpen('walk')}
+            />
+            <Button
+              text={includeButtonNames ? 'New Behavior Note' : null}
+              icon="git-repo"
+              small={true}
+              outlined={true}
+              fill={!includeButtonNames}
+              disabled={selectedDogs.length == 0}
+              onClick={() => toggleModalOpen('behaviorNote')}
+            />
+          </ButtonGroup>
+        )}
       </InputWrapper>
       <StyledTable className="bp5-html-table-striped">
         {includeButtonNames ? (
@@ -457,6 +483,14 @@ const Dogs = () => {
         </tbody>
       </StyledTable>
     </Wrapper>
+  );
+};
+
+const Dogs = () => {
+  return (
+    <ProtectedRoute requiredRole="volunteer">
+      <DogsContent />
+    </ProtectedRoute>
   );
 };
 

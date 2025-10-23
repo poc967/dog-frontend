@@ -36,7 +36,7 @@ const DogHeaderCard = (props) => {
     <Card style={{ padding: '10px', marginBottom: '1rem' }}>
       <CardDataWrapper>
         <Image
-          src="/dog.png"
+          src={props.dog.image || '/dog.png'}
           width={115}
           height={115}
           style={{ borderRadius: '3px' }}
