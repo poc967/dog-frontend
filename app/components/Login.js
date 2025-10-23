@@ -142,10 +142,14 @@ const Login = () => {
             color: '#5c7080',
           }}
         >
-          <p>Demo Credentials:</p>
-          <p>
-            <strong>Admin:</strong> admin@dogbackend.com / admin123
-          </p>
+          {process.env.NODE_ENV === 'production' ? (
+            <div>
+              <p>Demo Credentials:</p>
+              <p>
+                <strong>Admin:</strong> admin@dogbackend.com / admin123
+              </p>
+            </div>
+          ) : null}
         </div>
       </LoginCard>
     </LoginWrapper>
