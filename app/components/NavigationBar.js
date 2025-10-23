@@ -12,6 +12,7 @@ import {
 } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
+import Link from 'next/link';
 
 const NavBar = styled(Navbar)`
   background-color: #3a193b;
@@ -47,7 +48,10 @@ const NavigationBar = () => {
 
   const userMenu = (
     <Menu>
-      <MenuItem icon="person" text="Profile" />
+      {user.role === 'admin' ? (
+        <MenuItem icon="dashboard" text="Admin Dashboard" href={`/admin`} />
+      ) : null}
+      <MenuItem icon="person" text="Profile" href={`/user`} />
       <MenuItem icon="key" text="Change Password" />
       <MenuDivider />
       <MenuItem
@@ -62,7 +66,9 @@ const NavigationBar = () => {
   return (
     <NavBar>
       <Navbar.Group align={Alignment.LEFT}>
-        <Navbar.Heading>Baypath Volunteer Ops</Navbar.Heading>
+        <Navbar.Heading>
+          <Link href="/">Baypath Volunteer Ops</Link>
+        </Navbar.Heading>
       </Navbar.Group>
 
       <Navbar.Group align={Alignment.RIGHT}>
