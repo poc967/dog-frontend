@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Button,
   HTMLTable,
@@ -14,12 +14,20 @@ import {
   Spinner,
   Toaster,
   Position,
+  Switch,
 } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { devices } from '../constants/constants';
+import {
+  createLocation,
+  updateLocation,
+  deleteLocation,
+  getAllLocations,
+} from '../api/location-actions';
+import { useAuth } from '../contexts/AuthContext';
 
 const AdminWrapper = styled.div`
   padding: 2rem;
@@ -60,6 +68,23 @@ const CreateUserCard = styled(Card)`
   }
 `;
 
+const LocationCard = styled(Card)`
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media ${devices.md} {
+    padding: 1.25rem;
+  }
+
+  @media ${devices.sm} {
+    padding: 1rem;
+  }
+
+  @media ${devices.xs} {
+    padding: 0.75rem;
+  }
+`;
+
 const UserForm = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
@@ -84,6 +109,23 @@ const UserForm = styled.div`
 
     button {
       grid-column: 1;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+  }
+`;
+
+const LocationForm = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 1rem;
+  align-items: end;
+
+  @media ${devices.md} {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+
+    button {
       width: 100%;
       margin-top: 0.5rem;
     }
@@ -146,6 +188,7 @@ const SectionTitle = styled.h3`
 `;
 
 const AdminContent = () => {
+  const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -156,6 +199,15 @@ const AdminContent = () => {
     email: '',
     password: '',
     role: 'volunteer',
+  });
+
+  // Location management state
+  const [locations, setLocations] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(true);
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState({
+    name: '',
+    walkable: false,
   });
 
   // // Create toaster instance inside component to avoid SSR issues
@@ -169,7 +221,7 @@ const AdminContent = () => {
   //   return null;
   // }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get(API_ENDPOINTS.AUTH.USERS);
       setUsers(response.data.data);
@@ -179,10 +231,6 @@ const AdminContent = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
   }, []);
 
   const handleInputChange = (field) => (e) => {
@@ -251,6 +299,77 @@ const AdminContent = () => {
         return Intent.NONE;
     }
   };
+
+  // Location management functions
+  const fetchLocations = useCallback(async () => {
+    try {
+      const response = await getAllLocations(token);
+      setLocations(response.data || response);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      setError('Failed to fetch locations');
+    } finally {
+      setLocationsLoading(false);
+    }
+  }, [token]);
+
+  const handleLocationInputChange = (field, value) => {
+    setNewLocation((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const createNewLocation = async () => {
+    if (!newLocation.name.trim()) {
+      setError('Please enter a location name');
+      return;
+    }
+
+    setCreatingLocation(true);
+    try {
+      await createLocation(newLocation, token);
+      setSuccess('Location created successfully');
+      setNewLocation({ name: '', walkable: false });
+      fetchLocations(); // Refresh the locations list
+    } catch (error) {
+      setError(error.message || 'Failed to create location');
+    } finally {
+      setCreatingLocation(false);
+    }
+  };
+
+  const updateLocationToggle = async (locationId, currentValue) => {
+    try {
+      await updateLocation(locationId, { walkable: !currentValue }, token);
+      setSuccess('Location updated successfully');
+      fetchLocations(); // Refresh the locations list
+    } catch (error) {
+      setError(error.message || 'Failed to update location');
+    }
+  };
+
+  const deleteLocationById = async (locationId) => {
+    if (!window.confirm('Are you sure you want to delete this location?')) {
+      return;
+    }
+
+    try {
+      await deleteLocation(locationId, token);
+      setSuccess('Location deleted successfully');
+      fetchLocations(); // Refresh the locations list
+    } catch (error) {
+      setError(error.message || 'Failed to delete location');
+    }
+  };
+
+  // Fetch both users and locations on component mount
+  useEffect(() => {
+    fetchUsers();
+    fetchLocations();
+  }, [fetchUsers, fetchLocations]);
 
   if (loading) {
     return (
@@ -368,6 +487,109 @@ const AdminContent = () => {
             </tbody>
           </StyledTable>
         </TableWrapper>
+      </Section>
+
+      {/* Location Management Section */}
+      <Section>
+        <LocationCard>
+          <SectionTitle>Create New Location</SectionTitle>
+          <LocationForm>
+            <FormGroup label="Location Name">
+              <InputGroup
+                placeholder="Enter location name"
+                value={newLocation.name}
+                onChange={(e) =>
+                  handleLocationInputChange('name', e.target.value)
+                }
+                disabled={creatingLocation}
+              />
+            </FormGroup>
+
+            <FormGroup label="Walking Loop">
+              <Switch
+                checked={newLocation.walkable}
+                onChange={(e) =>
+                  handleLocationInputChange('walkable', e.target.checked)
+                }
+                disabled={creatingLocation}
+                label={newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}
+              />
+            </FormGroup>
+
+            <Button
+              intent={Intent.PRIMARY}
+              text="Create Location"
+              loading={creatingLocation}
+              onClick={createNewLocation}
+            />
+          </LocationForm>
+        </LocationCard>
+      </Section>
+
+      <Section>
+        <SectionTitle>All Locations</SectionTitle>
+        {locationsLoading ? (
+          <LoadingContainer>
+            <Spinner size={30} />
+          </LoadingContainer>
+        ) : (
+          <TableWrapper>
+            <StyledTable striped interactive>
+              <thead>
+                <tr>
+                  <th>Location Name</th>
+                  <th>Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {locations.map((location) => (
+                  <tr key={location._id || location.id}>
+                    <td>{location.name}</td>
+                    <td>
+                      <Tag
+                        intent={
+                          location.walkable ? Intent.PRIMARY : Intent.SUCCESS
+                        }
+                      >
+                        {location.walkable ? 'Walking Loop' : 'Pen/Yard'}
+                      </Tag>
+                    </td>
+                    <td>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.5rem',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Switch
+                          checked={location.walkable}
+                          onChange={() =>
+                            updateLocationToggle(
+                              location._id || location.id,
+                              location.walkable
+                            )
+                          }
+                          label=""
+                          small
+                        />
+                        <Button
+                          intent={Intent.DANGER}
+                          text="Delete"
+                          small
+                          onClick={() =>
+                            deleteLocationById(location._id || location.id)
+                          }
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </StyledTable>
+          </TableWrapper>
+        )}
       </Section>
     </AdminWrapper>
   );
