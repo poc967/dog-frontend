@@ -316,7 +316,7 @@ const DogsContent = () => {
       const newDog = await createDog(body, token);
 
       // Add the new dog to the dogs list
-      let prevDogs = [...dogs, newDog];
+      let prevDogs = [...dogs, newDog.data];
       setDogs(prevDogs);
 
       // Close the modal
