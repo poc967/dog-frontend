@@ -15,6 +15,7 @@ import { devices } from '../constants/constants';
 import { COLOR_OPTIONS } from '../config/api';
 import { useState } from 'react';
 import { FileInput } from '@blueprintjs/core';
+import axios from 'axios';
 
 const ModalWrapper = styled.div`
   left: calc(50vw - 17vw);
@@ -66,7 +67,11 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
     dob: '',
     image: null,
     imageName: '',
+    imageUrl: '', // Store the uploaded image URL
   });
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [createdDogId, setCreatedDogId] = useState(null);
 
   const handleInputChange = (field, value) => {
     setDogData((prev) => ({
@@ -75,15 +80,34 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!dogData.name || !dogData.location) {
       alert('Please fill in all required fields');
       return;
     }
 
-    onSubmit(dogData);
+    try {
+      // Create the dog with image URL if available
+      const dogPayload = {
+        name: dogData.name,
+        level1: dogData.level1,
+        level2: dogData.level2,
+        location: dogData.location,
+        dob: dogData.dob,
+        imageUrl: dogData.imageUrl || null, // Include the uploaded image URL
+      };
 
-    // Reset form
+      await onSubmit(dogPayload);
+
+      // Reset form
+      resetForm();
+    } catch (error) {
+      console.error('Error creating dog:', error);
+      alert('Failed to create dog. Please try again.');
+    }
+  };
+
+  const resetForm = () => {
     setDogData({
       name: '',
       level1: 'green',
@@ -91,49 +115,80 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
       location: '',
       dob: '',
       image: null,
+      imageName: '',
+      imageUrl: '',
     });
+    setCreatedDogId(null);
   };
 
   const handleCancel = () => {
-    // Reset form
-    setDogData({
-      name: '',
-      level1: 'green',
-      level2: 'yellow',
-      location: '',
-      dob: '',
-      image: null,
-    });
+    resetForm();
     onClose();
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageSelection = async (e) => {
     const file = e.target.files[0];
-    const name = file.name;
-    setDogData((prev) => ({
-      ...prev,
-      imageName: name,
-    }));
-    let data = new FormData();
-    data.append('file', file);
-
-    const config = {
-      url: `${process.env.REACT_APP_base_url}/user/upload-profile-image`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      data,
-    };
-
-    const res = await axios(config);
-    if (res.status === 200) {
+    if (file) {
       setDogData((prev) => ({
         ...prev,
-        image: res.data.imageUrl,
+        image: file,
+        imageName: file.name,
       }));
-    } else {
-      alert('Image upload failed');
+
+      // Upload the image immediately when selected
+      await handleImageUpload(file);
+    }
+  };
+
+  const handleImageUpload = async (imageFile) => {
+    if (!imageFile) return null;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await axios.post(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
+        }/upload/image`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data.isSuccessful) {
+        console.log('Image uploaded successfully');
+        const imageUrl = response.data.data.fileUrl; // Updated to match new response structure
+
+        // Update dogData with the uploaded image URL
+        setDogData((prev) => ({
+          ...prev,
+          imageUrl: imageUrl,
+        }));
+
+        return imageUrl; // Return the S3 URL
+      } else {
+        throw new Error('Image upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. You can try selecting a different image.');
+
+      // Clear the failed image selection
+      setDogData((prev) => ({
+        ...prev,
+        image: null,
+        imageName: '',
+        imageUrl: '',
+      }));
+
+      return null;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -239,14 +294,42 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
                 ))}
               </HTMLSelect>
             </FormGroup>
-            {/* <FormGroup label="Picture" labelFor="picture">
+
+            <FormGroup label="Profile Picture" labelFor="picture">
               <FileInput
                 id="imageName"
                 name="imageName"
-                text={dogData.imageName || 'Choose file...'}
-                onInputChange={(e) => handleImageUpload(e)}
+                text={
+                  isUploading
+                    ? 'Uploading...'
+                    : dogData.imageUrl
+                    ? `✓ ${dogData.imageName}`
+                    : dogData.imageName || 'Choose image file...'
+                }
+                onInputChange={handleImageSelection}
+                accept="image/*"
+                disabled={isUploading}
               />
-            </FormGroup> */}
+              {dogData.imageName && (
+                <small
+                  style={{
+                    color: dogData.imageUrl
+                      ? '#0d8050'
+                      : isUploading
+                      ? '#5c7080'
+                      : '#5C7080',
+                    marginTop: '4px',
+                    display: 'block',
+                  }}
+                >
+                  {isUploading
+                    ? `Uploading ${dogData.imageName}...`
+                    : dogData.imageUrl
+                    ? `✓ Image uploaded successfully`
+                    : `Selected: ${dogData.imageName}`}
+                </small>
+              )}
+            </FormGroup>
           </StyledSectionCard>
 
           <SectionCard>
@@ -255,14 +338,16 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
               minimal={true}
               outlined={true}
               onClick={handleSubmit}
+              disabled={isUploading}
             >
-              Add Dog
+              {isUploading ? 'Uploading Image...' : 'Add Dog'}
             </StyledButton>
             <StyledButton
               intent="danger"
               minimal={true}
               outlined={true}
               onClick={handleCancel}
+              disabled={isUploading}
             >
               Cancel
             </StyledButton>

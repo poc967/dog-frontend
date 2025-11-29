@@ -17,7 +17,6 @@ function getAuthHeaders(token) {
 export async function getDog(slug, token) {
   try {
     const headers = getAuthHeaders(token);
-    console.log('Fetching dog with token:', token);
     const res = await fetch(API_ENDPOINTS.DOG_BY_ID(slug), {
       headers,
       cache: 'no-store',
@@ -54,7 +53,6 @@ export async function getActivity(slug, token) {
 }
 
 export async function createAlert(dogId, alert, category, tab, token) {
-  console.log(dogId, alert, category, tab, token);
   try {
     const headers = getAuthHeaders(token);
     const body = {
