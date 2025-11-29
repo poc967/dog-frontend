@@ -323,7 +323,6 @@ const DogsContent = () => {
       setAddDogModalOpen(false);
 
       // Show success message (optional)
-      console.log('Dog added successfully', newDog);
     } catch (error) {
       console.error('Error adding dog:', error);
     }

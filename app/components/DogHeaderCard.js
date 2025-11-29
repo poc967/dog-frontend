@@ -36,7 +36,7 @@ const DogHeaderCard = (props) => {
     <Card style={{ padding: '10px', marginBottom: '1rem' }}>
       <CardDataWrapper>
         <Image
-          src={props.dog.image || '/dog.png'}
+          src={props.dog.imageUrl || '/dog.png'}
           width={115}
           height={115}
           style={{ borderRadius: '3px' }}
@@ -53,7 +53,7 @@ const DogHeaderCard = (props) => {
           >
             <ModalWrapper>
               <Image
-                src="/dog.png"
+                src={props.dog.imageUrl || '/dog.png'}
                 width={350}
                 height={350}
                 alt="image of dog"
