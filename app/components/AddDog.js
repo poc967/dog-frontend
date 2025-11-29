@@ -12,7 +12,7 @@ import {
   FormGroup,
 } from '@blueprintjs/core';
 import { devices } from '../constants/constants';
-import { COLOR_OPTIONS } from '../config/api';
+import { COLOR_OPTIONS, API_ENDPOINTS } from '../config/api';
 import { useState } from 'react';
 import { FileInput } from '@blueprintjs/core';
 import axios from 'axios';
@@ -148,17 +148,11 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      const response = await axios.post(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'
-        }/upload/image`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await axios.post(API_ENDPOINTS.IMAGE_UPLOAD, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
       if (response.status === 200 && response.data.isSuccessful) {
         console.log('Image uploaded successfully');

@@ -18,6 +18,7 @@ export const API_ENDPOINTS = {
   ACTIVITIES: `${API_BASE_URL}/activity`,
   COMPLETE_WALK: `${API_BASE_URL}/activity/complete-walk`,
   NOTES: `${API_BASE_URL}/note/new`,
+  IMAGE_UPLOAD: `${API_BASE_URL}/upload/image`,
 
   // Authentication endpoints
   AUTH: {
