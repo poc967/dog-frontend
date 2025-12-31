@@ -28,6 +28,7 @@ import {
   completeWalk,
   createBehaviorNote,
   getLocations,
+  removeDogs,
 } from '../api/dog-actions';
 import Link from 'next/link';
 
@@ -214,7 +215,7 @@ const DogsContent = () => {
         break;
       case false:
         setSelectedDogs(
-          selectedDogs.filter((selectedDog) => selectedDog.id != dog.id)
+          selectedDogs.filter((selectedDog) => selectedDog._id !== dog._id)
         );
         break;
       default:
@@ -328,6 +329,26 @@ const DogsContent = () => {
     }
   };
 
+  const handleRemoveDogs = async () => {
+    const dogIds = selectedDogs.map((selectedDogs) => selectedDogs._id);
+
+    try {
+      const res = await removeDogs(dogIds, token);
+      console.log(res);
+
+      if (res.isSuccessful) {
+        // Remove the deleted dogs from the dogs list
+        let updatedDogs = dogs.filter((dog) => !dogIds.includes(dog._id));
+        setDogs(updatedDogs);
+
+        // Reset selected dogs
+        setSelectedDogs([]);
+      }
+    } catch (error) {
+      console.error('Error removing dogs:', error);
+    }
+  };
+
   return (
     <Wrapper>
       <MoveDog
@@ -364,7 +385,8 @@ const DogsContent = () => {
               small={true}
               outlined={true}
               fill={!includeButtonNames}
-              disabled={true}
+              disabled={selectedDogs.length == 0}
+              onClick={() => handleRemoveDogs()}
             />
           </ButtonGroup>
         )}
@@ -433,7 +455,9 @@ const DogsContent = () => {
                 <td>
                   <Checkbox
                     onChange={(e) => handleSelectDog(dog, e)}
-                    checked={selectedDogs[dog._id]}
+                    checked={selectedDogs.some(
+                      (selectedDog) => selectedDog._id === dog._id
+                    )}
                     disabled={dog.isWalking}
                   />
                 </td>

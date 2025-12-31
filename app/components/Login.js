@@ -133,24 +133,6 @@ const Login = () => {
             large
           />
         </LoginForm>
-
-        <div
-          style={{
-            textAlign: 'center',
-            marginTop: '1.5rem',
-            fontSize: '0.9rem',
-            color: '#5c7080',
-          }}
-        >
-          {process.env.NODE_ENV === 'production' ? (
-            <div>
-              <p>Demo Credentials:</p>
-              <p>
-                <strong>Admin:</strong> admin@dogbackend.com / admin123
-              </p>
-            </div>
-          ) : null}
-        </div>
       </LoginCard>
     </LoginWrapper>
   );

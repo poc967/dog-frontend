@@ -33,6 +33,29 @@ export async function createDog(dogData, token) {
   }
 }
 
+export async function removeDogs(dogIds, token) {
+  const body = {
+    dogIds,
+  };
+  try {
+    const headers = getAuthHeaders(token);
+    const res = await fetch(API_ENDPOINTS.DOGS, {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error('Failed to delete dogs:', error);
+    throw new Error('Failed to delete dogs');
+  }
+}
+
 export async function moveOrWalkDogs(dogsData, token) {
   try {
     const headers = getAuthHeaders(token);
