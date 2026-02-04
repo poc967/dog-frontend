@@ -73,11 +73,18 @@ const AddAlert = (props) => {
     locations,
     toggleAlertsModalIsOpen,
     handleNewCategoryChange,
+    handleFriendChange,
     handleNewNoteChange,
     newWhiteBoardCategory,
+    selectedFriend,
     newWhiteBoardNote,
     handleSubmitWhiteBoard,
+    tab,
+    allDogs,
   } = props;
+
+  const isFriendsTab = tab === 'Friends';
+  const isValid = isFriendsTab ? selectedFriend : (newWhiteBoardNote.trim() && newWhiteBoardCategory);
 
   return (
     <Overlay2
@@ -90,7 +97,7 @@ const AddAlert = (props) => {
     >
       <ModalWrapper>
         <Section
-          title="Add Alert"
+          title={isFriendsTab ? "Add Friend" : "Add Alert"}
           rightElement={
             <Button
               icon="cross"
@@ -101,24 +108,43 @@ const AddAlert = (props) => {
           }
         >
           <StyledSectionCard>
-            <input
-              type="text"
-              class="bp5-input"
-              style={{ width: '100%', marginBottom: '1rem' }}
-              placeholder="Shy! Go Slow"
-              value={newWhiteBoardNote}
-              onChange={(e) => handleNewNoteChange(e)}
-            />
-            <HTMLSelect
-              class="bp5-html-select"
-              fill={true}
-              onChange={(e) => handleNewCategoryChange(e)}
-            >
-              <option>Select a Category...</option>
-              <option value="good">Good</option>
-              <option value="info">Info</option>
-              <option value="danger">Alert</option>
-            </HTMLSelect>
+            {!isFriendsTab && (
+              <input
+                type="text"
+                class="bp5-input"
+                style={{ width: '100%', marginBottom: '1rem' }}
+                placeholder="Shy! Go Slow"
+                value={newWhiteBoardNote}
+                onChange={(e) => handleNewNoteChange(e)}
+              />
+            )}
+            {isFriendsTab ? (
+              <HTMLSelect
+                class="bp5-html-select"
+                fill={true}
+                onChange={(e) => handleFriendChange(e)}
+                value={selectedFriend}
+              >
+                <option value="">Select a friend...</option>
+                {allDogs?.map((dog) => (
+                  <option key={dog._id} value={dog._id}>
+                    {dog.name}
+                  </option>
+                ))}
+              </HTMLSelect>
+            ) : (
+              <HTMLSelect
+                class="bp5-html-select"
+                fill={true}
+                onChange={(e) => handleNewCategoryChange(e)}
+                value={newWhiteBoardCategory}
+              >
+                <option value="">Select a Category...</option>
+                <option value="good">Good</option>
+                <option value="info">Info</option>
+                <option value="danger">Alert</option>
+              </HTMLSelect>
+            )}
           </StyledSectionCard>
           <SectionCard>
             <StyledButton
@@ -126,6 +152,7 @@ const AddAlert = (props) => {
               minimal={true}
               outlined={true}
               onClick={() => handleSubmitWhiteBoard()}
+              disabled={!isValid}
             >
               Submit
             </StyledButton>

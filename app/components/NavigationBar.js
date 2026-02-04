@@ -52,7 +52,6 @@ const NavigationBar = () => {
         <MenuItem icon="dashboard" text="Admin Dashboard" href={`/admin`} />
       ) : null}
       <MenuItem icon="person" text="Profile" href={`/user`} />
-      <MenuItem icon="key" text="Change Password" />
       <MenuDivider />
       <MenuItem
         icon="log-out"

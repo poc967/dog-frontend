@@ -77,6 +77,59 @@ export async function createAlert(dogId, alert, category, tab, token) {
   }
 }
 
+export async function addFriend(dogId, friendId, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const body = {
+      friendId: friendId,
+    };
+
+    const res = await fetch(API_ENDPOINTS.DOG_TAB(dogId, 'friends'), {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    let jsonResponse = await res.json();
+
+    return jsonResponse;
+  } catch (error) {
+    console.error('Failed to add friend:', error);
+    throw new Error('Failed to POST friend data');
+  }
+}
+
+export async function deleteFriend(dogId, friendId, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const body = {
+      friendId: friendId,
+    };
+
+    const res = await fetch(API_ENDPOINTS.DOG_TAB(dogId, 'friends'), {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    let jsonResponse = await res.json();
+    console.log('deleteFriend response:', jsonResponse);
+    
+    return jsonResponse;
+  } catch (error) {
+    console.error('Failed to delete friend:', error);
+    throw new Error('Failed to DELETE friend data');
+  }
+}
+
 export async function deleteWhiteboard(dogId, type, id, token) {
   try {
     const headers = getAuthHeaders(token);

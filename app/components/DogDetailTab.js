@@ -39,7 +39,8 @@ const Modal = (
 );
 
 const DogDetailTab = (props) => {
-  const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard } = props;
+  const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard, allDogs } =
+    props;
   const [alertsIsOpen, setAlertsIsOpen] = useState(true);
   const [dietIsOpen, setDietIsOpen] = useState(false);
   const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
@@ -105,25 +106,48 @@ const DogDetailTab = (props) => {
           compact={true}
         >
           <SectionCard padded={true}>
+            {console.log(
+              'Rendering tab:',
+              tab,
+              'with items:',
+              dog[tab.toLocaleLowerCase()]
+            )}
             {dog[tab.toLocaleLowerCase()].length !== 0 ? (
               <div>
                 <div>
-                  {PRIORITIES.map((priority, index) => (
-                    <div key={index}>
-                      {dog[tab.toLowerCase()]
-                        .filter((a) => a.priority === priority)
-                        .map((alert, index) =>
-                          alert && !alert.isDeleted ? (
-                            <Tags
-                              key={index}
-                              alert={alert}
-                              tab={tab}
-                              submitDeleteWhiteboard={submitDeleteWhiteboard}
-                            />
-                          ) : null
-                        )}
-                    </div>
-                  ))}
+                  {tab === 'Friends' ? (
+                    // Friends don't have priorities, so render them directly
+                    dog[tab.toLowerCase()]
+                      .filter((friend) => !friend.isDeleted)
+                      .map((friend, index) => (
+                        <Tags
+                          key={index}
+                          alert={friend}
+                          tab={tab}
+                          submitDeleteWhiteboard={submitDeleteWhiteboard}
+                          allDogs={allDogs}
+                        />
+                      ))
+                  ) : (
+                    // Other tabs use priority-based filtering
+                    PRIORITIES.map((priority, index) => (
+                      <div key={index}>
+                        {dog[tab.toLowerCase()]
+                          .filter((a) => a.priority === priority)
+                          .map((alert, index) =>
+                            alert && !alert.isDeleted ? (
+                              <Tags
+                                key={index}
+                                alert={alert}
+                                tab={tab}
+                                submitDeleteWhiteboard={submitDeleteWhiteboard}
+                                allDogs={allDogs}
+                              />
+                            ) : null
+                          )}
+                      </div>
+                    ))
+                  )}
                 </div>
                 <Tag
                   interactive
