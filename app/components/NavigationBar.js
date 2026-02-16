@@ -9,6 +9,7 @@ import {
   MenuItem,
   MenuDivider,
   Tag,
+  Tooltip,
 } from '@blueprintjs/core';
 import styled from 'styled-components';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +25,14 @@ const UserInfo = styled.div`
   align-items: center;
   gap: 0.5rem;
   color: white;
+`;
+
+const Username = styled.span`
+  display: inline-block;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const NavigationBar = () => {
@@ -44,6 +53,17 @@ const NavigationBar = () => {
       default:
         return 'minimal';
     }
+  };
+
+  const truncateUsername = (username, maxLength = 15) => {
+    if (!username || username.length <= maxLength) {
+      return username;
+    }
+    return username.substring(0, maxLength) + '...';
+  };
+
+  const isUsernameTruncated = (username, maxLength = 15) => {
+    return username && username.length > maxLength;
   };
 
   const userMenu = (
@@ -75,7 +95,13 @@ const NavigationBar = () => {
           <Tag intent={getRoleColor(user?.role)} minimal>
             {user?.role}
           </Tag>
-          <span>{user?.username}</span>
+          {isUsernameTruncated(user?.username) ? (
+            <Tooltip content={user?.username} position="bottom">
+              <Username>{truncateUsername(user?.username)}</Username>
+            </Tooltip>
+          ) : (
+            <Username>{user?.username}</Username>
+          )}
           <Popover content={userMenu} position="bottom-right">
             <Button icon="user" minimal style={{ color: 'white' }} />
           </Popover>
