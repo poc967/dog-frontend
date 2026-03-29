@@ -1,62 +1,25 @@
 'use client';
 
-import styled from 'styled-components';
-import {
-  HTMLSelect,
-  Overlay2,
-  Classes,
-  Section,
-  SectionCard,
-  Button,
-  InputGroup,
-  FormGroup,
-} from '@blueprintjs/core';
-import { devices } from '../constants/constants';
 import { COLOR_OPTIONS, API_ENDPOINTS } from '../config/api';
 import { useState } from 'react';
-import { FileInput } from '@blueprintjs/core';
 import axios from 'axios';
-
-const ModalWrapper = styled.div`
-  left: calc(50vw - 17vw);
-  margin: 10vh 0;
-  top: 0;
-  width: 33vw;
-
-  @media ${devices['2xl']} {
-    width: 33vw;
-  }
-  @media ${devices.xl} {
-    width: 33vw;
-  }
-  @media ${devices.lg} {
-    width: 50vw;
-    left: calc(50vw - 22vw);
-  }
-  @media ${devices.md} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.sm} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.xs} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-`;
-
-const StyledSectionCard = styled(SectionCard)`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 20px;
-`;
-
-const StyledButton = styled(Button)`
-  margin-right: 5px;
-`;
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/app/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
 
 const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
   const [dogData, setDogData] = useState({
@@ -187,168 +150,114 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
   };
 
   return (
-    <Overlay2
-      isOpen={isOpen}
-      className={Classes.OVERLAY_SCROLL_CONTAINER}
-      usePortal={true}
-      canOutsideClickClose={true}
-      onClose={handleCancel}
-    >
-      <ModalWrapper>
-        <Section
-          title="Add New Dog"
-          rightElement={
-            <Button
-              icon="cross"
-              outlined={false}
-              minimal={true}
-              onClick={handleCancel}
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Dog</DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="dog-name">Dog Name <span className="text-muted-foreground text-xs">(required)</span></Label>
+            <Input
+              id="dog-name"
+              placeholder="Enter dog name"
+              value={dogData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
             />
-          }
-        >
-          <StyledSectionCard>
-            <FormGroup
-              label="Dog Name"
-              labelFor="dog-name"
-              labelInfo="(required)"
-            >
-              <InputGroup
-                id="dog-name"
-                placeholder="Enter dog name"
-                value={dogData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-              />
-            </FormGroup>
+          </div>
 
-            <FormGroup label="Date of Birth" labelFor="dog-dob">
-              <InputGroup
-                id="dog-dob"
-                type="date"
-                placeholder="Select date of birth"
-                value={dogData.dob}
-                onChange={(e) => handleInputChange('dob', e.target.value)}
-              />
-            </FormGroup>
+          <div className="space-y-2">
+            <Label htmlFor="dog-dob">Date of Birth</Label>
+            <Input
+              id="dog-dob"
+              type="date"
+              value={dogData.dob}
+              onChange={(e) => handleInputChange('dob', e.target.value)}
+            />
+          </div>
 
-            <FormGroup
-              label="Initial Location"
-              labelFor="dog-location"
-              labelInfo="(required)"
-            >
-              <HTMLSelect
-                id="dog-location"
-                minimal={true}
-                fill={true}
-                value={dogData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-              >
-                <option value="">Select Location...</option>
+          <div className="space-y-2">
+            <Label htmlFor="dog-location">Initial Location <span className="text-muted-foreground text-xs">(required)</span></Label>
+            <Select value={dogData.location} onValueChange={(val) => handleInputChange('location', val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Location..." />
+              </SelectTrigger>
+              <SelectContent>
                 {locations
-                  .filter((location) => {
-                    return (
-                      !('walkable' in location) || location.walkable == false
-                    );
-                  })
-                  .map((location, index) => (
-                    <option key={index} value={location._id}>
+                  .filter((location) => !('walkable' in location) || location.walkable == false)
+                  .map((location) => (
+                    <SelectItem key={location._id} value={location._id}>
                       {location.name}
-                    </option>
+                    </SelectItem>
                   ))}
-              </HTMLSelect>
-            </FormGroup>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <FormGroup label="Level 1 Color" labelFor="level1-color">
-              <HTMLSelect
-                id="level1-color"
-                minimal={true}
-                fill={true}
-                value={dogData.level1}
-                onChange={(e) => handleInputChange('level1', e.target.value)}
-              >
+          <div className="space-y-2">
+            <Label htmlFor="level1-color">Level 1 Color</Label>
+            <Select value={dogData.level1} onValueChange={(val) => handleInputChange('level1', val)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 {COLOR_OPTIONS.map((color) => (
-                  <option key={color} value={color}>
+                  <SelectItem key={color} value={color}>
                     {color.charAt(0).toUpperCase() + color.slice(1)}
-                  </option>
+                  </SelectItem>
                 ))}
-              </HTMLSelect>
-            </FormGroup>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <FormGroup label="Level 2 Color" labelFor="level2-color">
-              <HTMLSelect
-                id="level2-color"
-                minimal={true}
-                fill={true}
-                value={dogData.level2}
-                onChange={(e) => handleInputChange('level2', e.target.value)}
-              >
+          <div className="space-y-2">
+            <Label htmlFor="level2-color">Level 2 Color</Label>
+            <Select value={dogData.level2} onValueChange={(val) => handleInputChange('level2', val)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 {COLOR_OPTIONS.map((color) => (
-                  <option key={color} value={color}>
+                  <SelectItem key={color} value={color}>
                     {color.charAt(0).toUpperCase() + color.slice(1)}
-                  </option>
+                  </SelectItem>
                 ))}
-              </HTMLSelect>
-            </FormGroup>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <FormGroup label="Profile Picture" labelFor="picture">
-              <FileInput
-                id="imageName"
-                name="imageName"
-                text={
-                  isUploading
-                    ? 'Uploading...'
-                    : dogData.imageUrl
-                    ? `✓ ${dogData.imageName}`
-                    : dogData.imageName || 'Choose image file...'
-                }
-                onInputChange={handleImageSelection}
-                accept="image/*"
-                disabled={isUploading}
-              />
-              {dogData.imageName && (
-                <small
-                  style={{
-                    color: dogData.imageUrl
-                      ? '#0d8050'
-                      : isUploading
-                      ? '#5c7080'
-                      : '#5C7080',
-                    marginTop: '4px',
-                    display: 'block',
-                  }}
-                >
-                  {isUploading
-                    ? `Uploading ${dogData.imageName}...`
-                    : dogData.imageUrl
-                    ? `✓ Image uploaded successfully`
-                    : `Selected: ${dogData.imageName}`}
-                </small>
-              )}
-            </FormGroup>
-          </StyledSectionCard>
+          <div className="space-y-2">
+            <Label htmlFor="picture">Profile Picture</Label>
+            <Input
+              id="picture"
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelection}
+              disabled={isUploading}
+            />
+            {dogData.imageName && (
+              <p className={`text-xs mt-1 ${dogData.imageUrl ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+                {isUploading
+                  ? `Uploading ${dogData.imageName}...`
+                  : dogData.imageUrl
+                  ? `✓ Image uploaded successfully`
+                  : `Selected: ${dogData.imageName}`}
+              </p>
+            )}
+          </div>
+        </div>
 
-          <SectionCard>
-            <StyledButton
-              intent="primary"
-              minimal={true}
-              outlined={true}
-              onClick={handleSubmit}
-              disabled={isUploading}
-            >
-              {isUploading ? 'Uploading Image...' : 'Add Dog'}
-            </StyledButton>
-            <StyledButton
-              intent="danger"
-              minimal={true}
-              outlined={true}
-              onClick={handleCancel}
-              disabled={isUploading}
-            >
-              Cancel
-            </StyledButton>
-          </SectionCard>
-        </Section>
-      </ModalWrapper>
-    </Overlay2>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={handleCancel} disabled={isUploading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isUploading}>
+            {isUploading ? 'Uploading Image...' : 'Add Dog'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

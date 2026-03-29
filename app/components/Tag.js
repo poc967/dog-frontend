@@ -1,21 +1,7 @@
-import { Tag, Icon } from '@blueprintjs/core';
-import { mapColorToIntent } from '../helpers/helpers';
+import { Badge } from '@/app/components/ui/badge';
+import { X } from 'lucide-react';
+import { mapColorToVariant } from '../helpers/helpers';
 import { useAuth } from '../contexts/AuthContext';
-import styled from 'styled-components';
-
-const DogImage = styled.img`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 8px;
-  vertical-align: middle;
-`;
-
-const TagContent = styled.div`
-  display: flex;
-  align-items: center;
-`;
 
 const Tags = (props) => {
   const { hasRole } = useAuth();
@@ -29,33 +15,32 @@ const Tags = (props) => {
   const showImage = tab === 'Friends' && alert.imageUrl;
   
   return (
-    <Tag
-      onRemove={true}
-      intent={mapColorToIntent(alert.priority || alert.level1 || 'info')}
-      style={{ marginBottom: '5px', marginLeft: '5px' }}
-      minimal={true}
+    <Badge
+      variant={mapColorToVariant(alert.priority || alert.level1 || 'info')}
+      className="mb-1 ml-1 gap-1.5 py-1 px-2.5"
     >
-      <TagContent>
+      <span className="flex items-center gap-1.5">
         {showImage && (
-          <DogImage 
+          <img 
             src={alert.imageUrl} 
             alt={alert.name}
+            className="w-5 h-5 rounded-full object-cover"
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
         )}
         <span>{displayText}</span>
-      </TagContent>
+      </span>
       {hasRole('admin') ? (
-        <button>
-          <Icon
-            icon="small-cross"
-            onClick={() => submitDeleteWhiteboard(alert._id, tab)}
-          />
+        <button
+          onClick={() => submitDeleteWhiteboard(alert._id, tab)}
+          className="ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5"
+        >
+          <X className="h-3 w-3" />
         </button>
       ) : null}
-    </Tag>
+    </Badge>
   );
 };
 

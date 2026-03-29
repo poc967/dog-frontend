@@ -1,58 +1,21 @@
 'use client';
 
-import styled from 'styled-components';
+import { Button } from '@/app/components/ui/button';
 import {
-  HTMLSelect,
-  Overlay2,
-  Classes,
-  Section,
-  SectionCard,
-  Button,
-  Tag,
-} from '@blueprintjs/core';
-import { devices } from '../constants/constants';
-import { useState, useEffect } from 'react';
-
-const ModalWrapper = styled.div`
-  left: calc(50vw - 17vw);
-  margin: 10vh 0;
-  top: 0;
-  width: 33vw;
-
-  @media ${devices['2xl']} {
-    width: 33vw;
-  }
-  @media ${devices.xl} {
-    width: 33vw;
-  }
-  @media ${devices.lg} {
-    width: 50vw;
-    left: calc(50vw - 22vw);
-  }
-  @media ${devices.md} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.sm} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.xs} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-`;
-
-const StyledSectionCard = styled(SectionCard)`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-`;
-
-const StyledButton = styled(Button)`
-  margin-right: 5px;
-`;
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/app/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
 
 const MoveDog = (props) => {
   const { type, selectedDogs, handleSubmit, handleLocationChange, locations } =
@@ -62,24 +25,22 @@ const MoveDog = (props) => {
   switch (type) {
     case 'move':
       content = (
-        <>
-          <HTMLSelect
-            minimal={true}
-            fill={true}
-            onChange={(e) => handleLocationChange(e)}
-          >
-            <option>Select Destination...</option>
+        <Select onValueChange={(val) => handleLocationChange({ target: { value: val } })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Destination..." />
+          </SelectTrigger>
+          <SelectContent>
             {locations
               .filter((location) => {
                 return !('walkable' in location) || location.walkable == false;
               })
-              .map((location, index) => (
-                <option key={index} value={location._id}>
+              .map((location) => (
+                <SelectItem key={location._id} value={location._id}>
                   {location.name}
-                </option>
+                </SelectItem>
               ))}
-          </HTMLSelect>
-        </>
+          </SelectContent>
+        </Select>
       );
       break;
     default:
@@ -87,47 +48,27 @@ const MoveDog = (props) => {
   }
 
   return (
-    <Overlay2
-      isOpen={props.isOpen}
-      className={Classes.OVERLAY_SCROLL_CONTAINER}
-      usePortal={true}
-      canOutsideClickClose={true}
-      onClose={props.toggleOpen}
-    >
-      <ModalWrapper>
-        <Section
-          title={() => getTitle()}
-          rightElement={
-            <Button
-              icon="cross"
-              outlined={false}
-              minimal={true}
-              onClick={props.toggleOpen}
-            />
-          }
-        >
-          <StyledSectionCard>{content}</StyledSectionCard>
-          <SectionCard>
-            <StyledButton
-              intent="primary"
-              minimal={true}
-              outlined={true}
-              onClick={() => handleSubmit()}
-            >
-              Submit
-            </StyledButton>
-            <StyledButton
-              intent="danger"
-              minimal={true}
-              outlined={true}
-              onClick={props.toggleOpen}
-            >
-              Cancel
-            </StyledButton>
-          </SectionCard>
-        </Section>
-      </ModalWrapper>
-    </Overlay2>
+    <Dialog open={props.isOpen} onOpenChange={(open) => { if (!open) props.toggleOpen(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Move Dog</DialogTitle>
+          <DialogDescription>
+            Select a destination to move the selected dogs.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-2">{content}</div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={props.toggleOpen}>
+            Cancel
+          </Button>
+          <Button onClick={() => handleSubmit()}>
+            Submit
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

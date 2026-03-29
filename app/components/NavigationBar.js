@@ -1,59 +1,31 @@
 'use client';
 
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
 import {
-  Navbar,
-  Alignment,
-  Button,
-  Popover,
-  Menu,
-  MenuItem,
-  MenuDivider,
-  Tag,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
+import {
   Tooltip,
-} from '@blueprintjs/core';
-import styled from 'styled-components';
+  TooltipContent,
+  TooltipTrigger,
+} from '@/app/components/ui/tooltip';
+import { ThemeToggle } from './ThemeToggle';
+import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { mapRoleToVariant } from '../helpers/helpers';
 import Link from 'next/link';
-
-const NavBar = styled(Navbar)`
-  background-color: #3a193b;
-  color: white;
-`;
-
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: white;
-`;
-
-const Username = styled.span`
-  display: inline-block;
-  max-width: 80px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
 
 const NavigationBar = () => {
   const { user, logout, isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return null; // Don't show navbar on login page
+    return null;
   }
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin':
-        return 'success';
-      case 'staff':
-        return 'primary';
-      case 'volunteer':
-        return 'warning';
-      default:
-        return 'minimal';
-    }
-  };
 
   const truncateUsername = (username, maxLength = 15) => {
     if (!username || username.length <= maxLength) {
@@ -66,48 +38,65 @@ const NavigationBar = () => {
     return username && username.length > maxLength;
   };
 
-  const userMenu = (
-    <Menu>
-      {user.role === 'admin' ? (
-        <MenuItem icon="dashboard" text="Admin Dashboard" href={`/admin`} />
-      ) : null}
-      <MenuItem icon="person" text="Profile" href={`/user`} />
-      <MenuDivider />
-      <MenuItem
-        icon="log-out"
-        text="Sign Out"
-        intent="danger"
-        onClick={logout}
-      />
-    </Menu>
-  );
-
   return (
-    <NavBar>
-      <Navbar.Group align={Alignment.LEFT}>
-        <Navbar.Heading>
-          <Link href="/">Baypath Volunteer Ops</Link>
-        </Navbar.Heading>
-      </Navbar.Group>
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <Link href="/" className="text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity">
+        Baypath Volunteer Ops
+      </Link>
 
-      <Navbar.Group align={Alignment.RIGHT}>
-        <UserInfo>
-          <Tag intent={getRoleColor(user?.role)} minimal>
-            {user?.role}
-          </Tag>
-          {isUsernameTruncated(user?.username) ? (
-            <Tooltip content={user?.username} position="bottom">
-              <Username>{truncateUsername(user?.username)}</Username>
-            </Tooltip>
-          ) : (
-            <Username>{user?.username}</Username>
-          )}
-          <Popover content={userMenu} position="bottom-right">
-            <Button icon="user" minimal style={{ color: 'white' }} />
-          </Popover>
-        </UserInfo>
-      </Navbar.Group>
-    </NavBar>
+      <div className="flex items-center gap-3">
+        <Badge variant={mapRoleToVariant(user?.role)}>
+          {user?.role}
+        </Badge>
+
+        {isUsernameTruncated(user?.username) ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-sm text-muted-foreground max-w-[80px] truncate inline-block">
+                {truncateUsername(user?.username)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{user?.username}</TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="text-sm text-muted-foreground">{user?.username}</span>
+        )}
+
+        <ThemeToggle />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {user?.role === 'admin' && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin" className="flex items-center gap-2 cursor-pointer">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Admin Dashboard
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <Link href="/user" className="flex items-center gap-2 cursor-pointer">
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive"
+              onClick={logout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </nav>
   );
 };
 

@@ -1,58 +1,57 @@
-import { HTMLTable } from '@blueprintjs/core';
-import styled from 'styled-components';
-import { Icon } from '@blueprintjs/core';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableCell,
+} from '@/app/components/ui/table';
+import { ArrowRight } from 'lucide-react';
 import { getLocalTime } from '../helpers/helpers';
-
-const Table = styled(HTMLTable)`
-  width: 100%;
-`;
 
 const ActivityHistory = (props) => {
   let activityHistory = props.activityHistory.message;
 
   return (
-    <Table className="bp5-html-table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Activity</th>
-          {/* <th>Location</th> */}
-          <th>Friends</th>
-        </tr>
-      </thead>
-      <tbody>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Time</TableHead>
+          <TableHead>Activity</TableHead>
+          <TableHead>Friends</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {activityHistory
           ? activityHistory
               .sort((a, b) => b.time - a.time)
               .map((activity, index) => (
-                <tr key={index}>
-                  <td>{getLocalTime(activity.time)}</td>
-                  <td>
+                <TableRow key={index}>
+                  <TableCell>{getLocalTime(activity.time)}</TableCell>
+                  <TableCell>
                     {activity.activity == 'move' ? (
-                      <div>
-                        <span>{activity.previous_location.name + ' '}</span>
-                        <Icon
-                          icon="arrow-right"
-                          intent={
+                      <div className="flex items-center gap-1">
+                        <span>{activity.previous_location.name}</span>
+                        <ArrowRight
+                          className={`h-4 w-4 ${
                             activity.location.name == 'Kennel'
-                              ? 'danger'
-                              : 'success'
-                          }
+                              ? 'text-destructive'
+                              : 'text-green-600'
+                          }`}
                         />
-                        <span>{' ' + activity.location.name}</span>
+                        <span>{activity.location.name}</span>
                       </div>
                     ) : (
                       <span>{`${activity.activity} - ${activity.location.name}`}</span>
                     )}
-                  </td>
-                  {/* <td>{activity.location}</td> */}
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {activity.friends.map((friend) => friend.name).join(', ')}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
           : null}
-      </tbody>
+      </TableBody>
     </Table>
   );
 };

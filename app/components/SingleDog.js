@@ -1,12 +1,14 @@
 'use client';
 
 import styled from 'styled-components';
-import { Tabs, Tab, Breadcrumb, Breadcrumbs, Spinner } from '@blueprintjs/core';
-import { use, useEffect, useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
 import { createNote } from '../api/notes';
 import { createAlert, deleteWhiteboard, getDogs, addFriend, deleteFriend } from '../api/dog';
+import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 // components
 import DogHeaderCard from '@/app/components/DogHeaderCard';
@@ -45,14 +47,8 @@ const Wrapper = styled.div`
   }
 `;
 
-const StyledTabs = styled(Tabs)`
-  ul {
-    overflow-y: scroll;
-  }
-`;
-
 const tabComponentMap = {
-  details: DogDetailTab, // Map tab name to component
+  details: DogDetailTab,
   activity_history: ActivityHistory,
   behavior_notes: BehaviorNotes,
   qr_code: QRCode,
@@ -70,7 +66,7 @@ const TabPanelRenderer = ({
   submitDeleteWhiteboard,
   allDogs,
 }) => {
-  const Component = tabComponentMap[toSnakeCase(tabName)]; // Get the component based on tab name
+  const Component = tabComponentMap[toSnakeCase(tabName)];
   return Component ? (
     <Component
       dog={dog}
@@ -84,10 +80,6 @@ const TabPanelRenderer = ({
       allDogs={allDogs}
     />
   ) : null;
-};
-
-const renderCurrentBreadcrumb = ({ text, ...restProps }) => {
-  return <Breadcrumb {...restProps}>{text}</Breadcrumb>;
 };
 
 const SingleDog = (props) => {
@@ -104,15 +96,12 @@ const SingleDog = (props) => {
   const [tab, setTab] = useState(null);
   const [allDogs, setAllDogs] = useState([]);
 
-  const breadCrumbs = [{ href: '/dogs/', text: 'Dogs' }, { text: dog.name }];
-
   useEffect(() => {
     const fetchAllDogs = async () => {
       if (!props.token) return;
 
       try {
         const data = await getDogs(props.token);
-        // Filter out the current dog
         const otherDogs = data.message.filter((d) => d._id !== dog._id);
         setAllDogs(otherDogs);
       } catch (error) {
@@ -158,24 +147,19 @@ const SingleDog = (props) => {
 
   const handleSubmitWhiteBoard = async () => {
     if (tab === 'Friends') {
-      // For Friends tab, only need to select a friend
       if (!selectedFriend) {
         return;
       }
 
-      // Use the specific friends API endpoint
       let res = await addFriend(dog._id, selectedFriend, props.token);
       let newDog = { ...dog };
       newDog.friends = res.data.friends;
       await setDog(newDog);
-      console.log('Added friend:', newDog);
     } else {
-      // For other tabs, validate that both note and category are selected
       if (!newWhiteBoardNote.trim() || !newWhiteBoardCategory) {
         return;
       }
 
-      // Use the regular alert API
       let res = await createAlert(
         dog._id,
         newWhiteBoardNote,
@@ -199,15 +183,13 @@ const SingleDog = (props) => {
     let res;
     
     if (tab === 'Friends') {
-      // For Friends, use the deleteFriend API with the friend's ID
       res = await deleteFriend(dog._id, alertId, props.token);
       let newDog = {
         ...dog,
-        friends: res.data.friends, // Use the updated friends array from the response
+        friends: res.data.friends,
       };
       await setDog(newDog);
     } else {
-      // For other tabs, use the regular deleteWhiteboard API
       res = await deleteWhiteboard(dog._id, tab, alertId, props.token);
       let newDog = {
         ...dog,
@@ -233,42 +215,41 @@ const SingleDog = (props) => {
           tab={tab}
           allDogs={allDogs}
         />
-        <div style={{ marginBottom: '0.5rem' }}>
-          <Breadcrumbs
-            currentBreadcrumbRenderer={renderCurrentBreadcrumb}
-            items={breadCrumbs}
-          />
-        </div>
+        <nav className="flex items-center text-sm text-muted-foreground mb-2">
+          <Link href="/dogs/" className="hover:text-foreground transition-colors">
+            Dogs
+          </Link>
+          <ChevronRight className="h-4 w-4 mx-1" />
+          <span className="text-foreground font-medium">{dog.name}</span>
+        </nav>
         <DogHeaderCard dog={dog} />
-        <StyledTabs
-          selectedTabId={currentSelectedTab}
-          onChange={(e) => setCurrentSelectedTab(e)}
-          style={{ overflowY: 'scroll' }}
-        >
+        <Tabs value={currentSelectedTab} onValueChange={setCurrentSelectedTab}>
+          <TabsList className="w-full overflow-x-auto justify-start">
+            {DOG_HEADER_TABS.map((tab) => (
+              <TabsTrigger key={tab} value={tab.toLocaleLowerCase()}>
+                {tab}
+              </TabsTrigger>
+            ))}
+          </TabsList>
           {DOG_HEADER_TABS.map((tab) => (
-            <Tab
-              key={tab}
-              id={tab.toLocaleLowerCase()}
-              title={tab}
-              panel={
-                <TabPanelRenderer
-                  tabName={tab}
-                  dog={dog}
-                  activityHistory={activityHistory}
-                  notes={notes}
-                  handleChange={handleChange}
-                  handleSubmit={handleSubmit}
-                  newNote={newNote}
-                  toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
-                  handleNewNoteChange={handleNewNoteChange}
-                  handleNewCategoryChange={handleNewCategoryChange}
-                  submitDeleteWhiteboard={submitDeleteWhiteboard}
-                  allDogs={allDogs}
-                />
-              }
-            />
+            <TabsContent key={tab} value={tab.toLocaleLowerCase()}>
+              <TabPanelRenderer
+                tabName={tab}
+                dog={dog}
+                activityHistory={activityHistory}
+                notes={notes}
+                handleChange={handleChange}
+                handleSubmit={handleSubmit}
+                newNote={newNote}
+                toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
+                handleNewNoteChange={handleNewNoteChange}
+                handleNewCategoryChange={handleNewCategoryChange}
+                submitDeleteWhiteboard={submitDeleteWhiteboard}
+                allDogs={allDogs}
+              />
+            </TabsContent>
           ))}
-        </StyledTabs>
+        </Tabs>
       </Wrapper>
     </main>
   );

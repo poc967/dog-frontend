@@ -1,13 +1,17 @@
 'use client';
 
+import { Button } from '@/app/components/ui/button';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { Input } from '@/app/components/ui/input';
 import {
-  Button,
-  Checkbox,
-  HTMLTable,
-  InputGroup,
-  ButtonGroup,
-  Spinner,
-} from '@blueprintjs/core';
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableCell,
+} from '@/app/components/ui/table';
+import { Loader2, Plus, Archive, ArrowLeftRight, Footprints, FileText, X } from 'lucide-react';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -58,39 +62,6 @@ const Wrapper = styled.div`
   @media ${devices.xs} {
     width: 95vw;
   }
-`;
-
-const StyledTable = styled(HTMLTable)`
-  border: solid #e5e7eb 1px;
-  border-radius: 5px;
-`;
-
-const InputWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 10px;
-
-  @media ${devices.sm} {
-    flex-direction: column;
-  }
-`;
-
-const SearchWrapper = styled.div`
-  width: 35%;
-
-  @media ${devices.sm} {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 2rem;
-  width: 100%;
 `;
 
 const DogsContent = () => {
@@ -368,143 +339,147 @@ const DogsContent = () => {
         onSubmit={handleAddDog}
         locations={locations}
       />
-      <InputWrapper>
+      <div className="flex flex-row justify-between mb-2.5 max-sm:flex-col">
         {hasRole('staff') && (
-          <ButtonGroup style={{ minWidth: '12rem' }}>
+          <div className="flex gap-1 min-w-[12rem]">
             <Button
-              text={includeButtonNames ? 'Add Dog' : null}
-              icon="plus"
-              small={true}
-              outlined={true}
-              fill={!includeButtonNames}
+              variant="outline"
+              size="sm"
               onClick={() => setAddDogModalOpen(true)}
-            />
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Dog
+            </Button>
             <Button
-              text={includeButtonNames ? 'Archive' : null}
-              icon="archive"
-              small={true}
-              outlined={true}
-              fill={!includeButtonNames}
+              variant="outline"
+              size="sm"
               disabled={selectedDogs.length == 0}
               onClick={() => handleRemoveDogs()}
-            />
-          </ButtonGroup>
+            >
+              <Archive className="h-4 w-4 mr-1" />
+              Archive
+            </Button>
+          </div>
         )}
-      </InputWrapper>
-      <InputWrapper>
-        <SearchWrapper>
-          <InputGroup small={true} placeholder="Search..." />
-        </SearchWrapper>
+      </div>
+      <div className="flex flex-row justify-between mb-2.5 max-sm:flex-col">
+        <div className="w-[35%] max-sm:w-full max-sm:mb-2">
+          <Input placeholder="Search..." className="h-8" />
+        </div>
         {hasRole('staff') && (
-          <ButtonGroup style={{ minWidth: '12rem' }}>
+          <div className="flex gap-1 min-w-[12rem]">
             <Button
-              text={includeButtonNames ? 'Move dog(s)' : null}
-              icon="changes"
-              small={true}
-              outlined={true}
-              fill={!includeButtonNames}
+              variant="outline"
+              size="sm"
               disabled={selectedDogs.length == 0}
               onClick={() => toggleModalOpen('move')}
-            />
+            >
+              <ArrowLeftRight className="h-4 w-4 mr-1" />
+              Move dog(s)
+            </Button>
             <Button
-              text={includeButtonNames ? 'Start walk' : null}
-              icon="walk"
-              small={true}
-              outlined={true}
-              fill={!includeButtonNames}
+              variant="outline"
+              size="sm"
               disabled={selectedDogs.length == 0}
               onClick={() => toggleModalOpen('walk')}
-            />
+            >
+              <Footprints className="h-4 w-4 mr-1" />
+              Start walk
+            </Button>
             <Button
-              text={includeButtonNames ? 'New Behavior Note' : null}
-              icon="git-repo"
-              small={true}
-              outlined={true}
-              fill={!includeButtonNames}
+              variant="outline"
+              size="sm"
               disabled={selectedDogs.length == 0}
               onClick={() => toggleModalOpen('behaviorNote')}
-            />
-          </ButtonGroup>
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              New Note
+            </Button>
+          </div>
         )}
-      </InputWrapper>
-      <StyledTable className="bp5-html-table-striped">
-        {includeButtonNames ? (
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Level</th>
-              <th>Location</th>
-              {/* <th>Last Out</th> */}
-              <th></th>
-            </tr>
-          </thead>
-        ) : null}
-        <tbody>
-          {fetchingDogs ? (
-            <tr>
-              <td colSpan={includeButtonNames ? 6 : 1}>
-                <LoadingContainer>
-                  <Spinner size={40} />
-                </LoadingContainer>
-              </td>
-            </tr>
-          ) : dogs.length !== 0 ? (
-            dogs.map((dog, index) => (
-              <tr key={index}>
-                <td>
-                  <Checkbox
-                    onChange={(e) => handleSelectDog(dog, e)}
-                    checked={selectedDogs.some(
-                      (selectedDog) => selectedDog._id === dog._id
-                    )}
-                    disabled={dog.isWalking}
-                  />
-                </td>
-                <td>
-                  <Link href={`/dogs/${dog._id}`}>{dog.name}</Link>
-                </td>
-                <td valign="middle">
-                  <LevelIndicator
-                    color1={dog.level1}
-                    color2={dog.level2}
-                    small={true}
-                  />
-                </td>
-                <td>
-                  <span
-                    className={`${
-                      endingWalkDog == dog._id ? 'bp5-skeleton' : null
-                    }`}
-                  >
-                    {dog.location.name}
-                  </span>
-                </td>
-                {/* <td>2:15</td> */}
-                <td>
-                  {dog.isWalking ? (
-                    <Button
-                      text={includeButtonNames ? 'End walk' : null}
-                      icon="cross"
-                      small={true}
-                      outlined={true}
-                      fill={!includeButtonNames}
-                      onClick={() => submitEndWalk(dog)}
-                      intent="danger"
+      </div>
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-10"></TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Level</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead className="w-24"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {fetchingDogs ? (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div className="flex justify-center items-center p-8">
+                    <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : dogs.length !== 0 ? (
+              dogs.map((dog, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Checkbox
+                      onCheckedChange={(checked) =>
+                        handleSelectDog(dog, { target: { checked } })
+                      }
+                      checked={selectedDogs.some(
+                        (selectedDog) => selectedDog._id === dog._id
+                      )}
+                      disabled={dog.isWalking}
                     />
-                  ) : null}
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={includeButtonNames ? 6 : 1}>
-                <LoadingContainer>No dogs found</LoadingContainer>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </StyledTable>
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/dogs/${dog._id}`} className="text-primary hover:underline">
+                      {dog.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <LevelIndicator
+                      color1={dog.level1}
+                      color2={dog.level2}
+                      small={true}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={
+                        endingWalkDog == dog._id ? 'animate-pulse bg-muted rounded px-2 py-1' : ''
+                      }
+                    >
+                      {dog.location.name}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {dog.isWalking ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => submitEndWalk(dog)}
+                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        End walk
+                      </Button>
+                    ) : null}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5}>
+                  <div className="flex justify-center items-center p-8 text-muted-foreground">
+                    No dogs found
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </Wrapper>
   );
 };
