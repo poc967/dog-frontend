@@ -3,15 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './contexts/AuthContext';
-import { Spinner } from '@blueprintjs/core';
-import styled from 'styled-components';
-
-const LoadingWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-`;
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -22,21 +14,12 @@ export default function Home() {
       if (isAuthenticated) {
         router.push('/dogs');
       }
-      // If not authenticated, the ProtectedRoute will handle showing the login
     }
   }, [isAuthenticated, loading, router]);
 
-  if (loading) {
-    return (
-      <LoadingWrapper>
-        <Spinner size={50} />
-      </LoadingWrapper>
-    );
-  }
-
   return (
-    <LoadingWrapper>
-      <Spinner size={50} />
-    </LoadingWrapper>
+    <div className="flex justify-center items-center min-h-screen">
+      <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+    </div>
   );
 }

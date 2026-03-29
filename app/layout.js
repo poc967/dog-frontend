@@ -1,6 +1,8 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import StyledComponentsRegistry from './registry';
+import { ThemeProvider } from 'next-themes';
+import { Toaster } from 'sonner';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,11 +20,14 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <StyledComponentsRegistry>
-          <ClientLayout>{children}</ClientLayout>
-        </StyledComponentsRegistry>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <StyledComponentsRegistry>
+            <ClientLayout>{children}</ClientLayout>
+          </StyledComponentsRegistry>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

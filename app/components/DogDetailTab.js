@@ -1,172 +1,106 @@
 import {
-  Section,
-  SectionCard,
-  NonIdealState,
-  Tag,
-  Button,
-  Overlay2,
-  EditableText,
-} from '@blueprintjs/core';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/app/components/ui/accordion';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
+import EmptyState from '@/app/components/ui/EmptyState';
 import { DETAIL_CATEGORIES, PRIORITIES } from '../constants/constants';
-import { useState } from 'react';
+import { Plus } from 'lucide-react';
 
 // Components
 import Tags from './Tag';
 
-const getRightElement = (num) => (
-  <Tag intent="danger" round>
-    {num}
-  </Tag>
-);
-
-const Action = (tab, toggleAlertsModalIsOpen) => (
-  <Button
-    icon="add"
-    text="Add something"
-    minimal
-    outlined
-    small
-    intent="none"
-    onClick={() => toggleAlertsModalIsOpen(tab)}
-  />
-);
-
-const Modal = (
-  <Overlay2 isOpen={true} usePortal={true} canOutsideClickClose={true} onClose>
-    {/* <EditableText /> */}
-    <span>Test</span>
-  </Overlay2>
-);
-
 const DogDetailTab = (props) => {
   const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard, allDogs } =
     props;
-  const [alertsIsOpen, setAlertsIsOpen] = useState(true);
-  const [dietIsOpen, setDietIsOpen] = useState(false);
-  const [behaviorIsOpen, setBehaviorIsOpen] = useState(false);
-  const [friendsIsOpen, setFriendsIsOpen] = useState(false);
-  const [miscIsOpen, setMiscIsOpen] = useState(false);
-
-  const toggleAlertsIsOpen = () => {
-    setAlertsIsOpen(!alertsIsOpen);
-  };
-
-  const toggleDietIsOpen = () => {
-    setDietIsOpen(!dietIsOpen);
-  };
-
-  const toggleBehaviorIsOpen = () => {
-    setBehaviorIsOpen(!behaviorIsOpen);
-  };
-
-  const toggleFriendsIsOpen = () => {
-    setFriendsIsOpen(!friendsIsOpen);
-  };
-
-  const toggleMiscIsOpen = () => {
-    setMiscIsOpen(!miscIsOpen);
-  };
-
-  const stateMap = {
-    Alerts: alertsIsOpen,
-    Diet: dietIsOpen,
-    Behavior: behaviorIsOpen,
-    Friends: friendsIsOpen,
-    Misc: miscIsOpen,
-  };
-
-  const functionMap = {
-    Alerts: toggleAlertsIsOpen,
-    Diet: toggleDietIsOpen,
-    Behavior: toggleBehaviorIsOpen,
-    Friends: toggleFriendsIsOpen,
-    Misc: toggleMiscIsOpen,
-  };
 
   return (
-    <div>
-      {DETAIL_CATEGORIES.map((tab, index) => (
-        <Section
-          key={index}
-          collapsible={true}
-          collapseProps={{
-            isOpen: stateMap[tab],
-            onToggle: functionMap[tab],
-          }}
-          title={tab}
-          rightElement={
-            dog[tab.toLocaleLowerCase()].length == 0
-              ? null
-              : getRightElement(
-                  dog[tab.toLocaleLowerCase()].filter(
-                    (alert) => !alert.isDeleted
-                  ).length
-                )
-          }
-          compact={true}
-        >
-          <SectionCard padded={true}>
-            {console.log(
-              'Rendering tab:',
-              tab,
-              'with items:',
-              dog[tab.toLocaleLowerCase()]
-            )}
-            {dog[tab.toLocaleLowerCase()].length !== 0 ? (
-              <div>
-                <div>
-                  {tab === 'Friends' ? (
-                    // Friends don't have priorities, so render them directly
-                    dog[tab.toLowerCase()]
-                      .filter((friend) => !friend.isDeleted)
-                      .map((friend, index) => (
-                        <Tags
-                          key={index}
-                          alert={friend}
-                          tab={tab}
-                          submitDeleteWhiteboard={submitDeleteWhiteboard}
-                          allDogs={allDogs}
-                        />
-                      ))
-                  ) : (
-                    // Other tabs use priority-based filtering
-                    PRIORITIES.map((priority, index) => (
-                      <div key={index}>
-                        {dog[tab.toLowerCase()]
-                          .filter((a) => a.priority === priority)
-                          .map((alert, index) =>
-                            alert && !alert.isDeleted ? (
-                              <Tags
-                                key={index}
-                                alert={alert}
-                                tab={tab}
-                                submitDeleteWhiteboard={submitDeleteWhiteboard}
-                                allDogs={allDogs}
-                              />
-                            ) : null
-                          )}
-                      </div>
-                    ))
-                  )}
-                </div>
-                <Tag
-                  interactive
-                  style={{ marginBottom: '5px', marginLeft: '5px' }}
-                  onClick={() => toggleAlertsModalIsOpen(tab)}
-                >
-                  Add
-                </Tag>
+    <Accordion type="multiple" defaultValue={['Alerts']} className="w-full">
+      {DETAIL_CATEGORIES.map((tab) => {
+        const items = dog[tab.toLocaleLowerCase()];
+        const activeCount = items.filter((item) => !item.isDeleted).length;
+
+        return (
+          <AccordionItem key={tab} value={tab}>
+            <AccordionTrigger className="text-sm">
+              <div className="flex items-center gap-2">
+                <span>{tab}</span>
+                {activeCount > 0 && (
+                  <Badge variant="destructive" className="rounded-full text-xs px-2 py-0">
+                    {activeCount}
+                  </Badge>
+                )}
               </div>
-            ) : (
-              <NonIdealState
-                title="Nothing to see here!"
-                action={Action(tab, toggleAlertsModalIsOpen)}
-              />
-            )}
-          </SectionCard>
-        </Section>
-      ))}
-    </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="p-3">
+                {items.length !== 0 ? (
+                  <div>
+                    <div>
+                      {tab === 'Friends' ? (
+                        items
+                          .filter((friend) => !friend.isDeleted)
+                          .map((friend, index) => (
+                            <Tags
+                              key={index}
+                              alert={friend}
+                              tab={tab}
+                              submitDeleteWhiteboard={submitDeleteWhiteboard}
+                              allDogs={allDogs}
+                            />
+                          ))
+                      ) : (
+                        PRIORITIES.map((priority, index) => (
+                          <div key={index}>
+                            {items
+                              .filter((a) => a.priority === priority)
+                              .map((alert, index) =>
+                                alert && !alert.isDeleted ? (
+                                  <Tags
+                                    key={index}
+                                    alert={alert}
+                                    tab={tab}
+                                    submitDeleteWhiteboard={submitDeleteWhiteboard}
+                                    allDogs={allDogs}
+                                  />
+                                ) : null
+                              )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer mt-2 mb-1 ml-1"
+                      onClick={() => toggleAlertsModalIsOpen(tab)}
+                    >
+                      Add
+                    </Badge>
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Nothing to see here!"
+                    action={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAlertsModalIsOpen(tab)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add something
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+    </Accordion>
   );
 };
 

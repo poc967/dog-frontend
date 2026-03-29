@@ -1,13 +1,13 @@
-import { Button, EditableText, Section, SectionCard } from '@blueprintjs/core';
-import styled from 'styled-components';
+import { Button } from '@/app/components/ui/button';
+import { Textarea } from '@/app/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@/app/components/ui/table';
+import { Plus } from 'lucide-react';
 import { getLocalDate } from '../helpers/helpers';
-
-const TextArea = styled.textarea`
-  width: 100%;
-  border: solid #eeeeee 1px;
-  border-radius: 2px;
-  padding: 10px;
-`;
 
 const BehaviorNotes = (props) => {
   const { notes, newNote } = props;
@@ -15,34 +15,36 @@ const BehaviorNotes = (props) => {
 
   return (
     <div>
-      <table className="bp5-html-table">
-        <tbody>
-          <tr>
-            <td>
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell>
               <Button
-                text="Add"
-                icon="plus"
-                intent="success"
+                size="sm"
+                variant="success"
                 onClick={() => handleSubmit()}
-              />
-            </td>
-            <td>
-              <TextArea
-                fill={true}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </TableCell>
+            <TableCell>
+              <Textarea
                 placeholder="Write something here..."
                 value={props.newNote}
                 onChange={(e) => handleChange(e)}
+                className="min-h-[60px]"
               />
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
           {notes.map((note) => (
-            <tr key={note._id}>
-              <td>{getLocalDate(note.created)}</td>
-              <td>{note.text}</td>
-            </tr>
+            <TableRow key={note._id}>
+              <TableCell className="text-muted-foreground text-sm">{getLocalDate(note.created)}</TableCell>
+              <TableCell>{note.text}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };

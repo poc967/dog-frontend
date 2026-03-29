@@ -11,6 +11,32 @@ export function mapColorToIntent(priority) {
   }
 }
 
+export function mapColorToVariant(priority) {
+  switch (priority) {
+    case 'danger':
+      return 'danger';
+    case 'good':
+      return 'success';
+    case 'info':
+      return 'info';
+    default:
+      return 'secondary';
+  }
+}
+
+export function mapRoleToVariant(role) {
+  switch (role) {
+    case 'admin':
+      return 'success';
+    case 'staff':
+      return 'info';
+    case 'volunteer':
+      return 'warning';
+    default:
+      return 'secondary';
+  }
+}
+
 export function mapLevelToColor(level) {
   switch (level) {
     case 'green':

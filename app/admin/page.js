@@ -1,21 +1,29 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Badge } from '@/app/components/ui/badge';
+import { Switch } from '@/app/components/ui/switch';
+import { Card, CardContent } from '@/app/components/ui/card';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import {
-  Button,
-  HTMLTable,
-  Card,
-  FormGroup,
-  InputGroup,
-  HTMLSelect,
-  Callout,
-  Intent,
-  Tag,
-  Spinner,
-  Toaster,
-  Position,
-  Switch,
-} from '@blueprintjs/core';
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableCell,
+} from '@/app/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import styled from 'styled-components';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
@@ -51,40 +59,6 @@ const Section = styled.div`
   margin-bottom: 2rem;
 `;
 
-const CreateUserCard = styled(Card)`
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-
-  @media ${devices.md} {
-    padding: 1.25rem;
-  }
-
-  @media ${devices.sm} {
-    padding: 1rem;
-  }
-
-  @media ${devices.xs} {
-    padding: 0.75rem;
-  }
-`;
-
-const LocationCard = styled(Card)`
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-
-  @media ${devices.md} {
-    padding: 1.25rem;
-  }
-
-  @media ${devices.sm} {
-    padding: 1rem;
-  }
-
-  @media ${devices.xs} {
-    padding: 0.75rem;
-  }
-`;
-
 const UserForm = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
@@ -95,7 +69,6 @@ const UserForm = styled.div`
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
 
-    /* Make button span full width on smaller screens */
     button {
       grid-column: 1 / -1;
       justify-self: center;
@@ -129,61 +102,6 @@ const LocationForm = styled.div`
       width: 100%;
       margin-top: 0.5rem;
     }
-  }
-`;
-
-const StyledTable = styled(HTMLTable)`
-  width: 100%;
-  margin-top: 1rem;
-`;
-
-const TableWrapper = styled.div`
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
-  @media ${devices.md} {
-    /* Add some padding to prevent content from touching edges */
-    padding: 0 0.5rem;
-    margin: 0 -0.5rem;
-  }
-
-  /* Hide table headers that are less important on mobile */
-  @media ${devices.sm} {
-    table th:nth-child(4), /* Created */
-    table td:nth-child(4) {
-      display: none;
-    }
-  }
-
-  @media ${devices.xs} {
-    table th:nth-child(2), /* Email */
-    table td:nth-child(2) {
-      display: none;
-    }
-  }
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 2rem;
-`;
-
-const PageTitle = styled.h1`
-  margin-bottom: 2rem;
-
-  @media ${devices.sm} {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const SectionTitle = styled.h3`
-  margin-bottom: 1rem;
-
-  @media ${devices.sm} {
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
   }
 `;
 
@@ -290,13 +208,13 @@ const AdminContent = () => {
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin':
-        return Intent.SUCCESS;
+        return 'success';
       case 'staff':
-        return Intent.PRIMARY;
+        return 'default';
       case 'volunteer':
-        return Intent.WARNING;
+        return 'warning';
       default:
-        return Intent.NONE;
+        return 'secondary';
     }
   };
 
@@ -373,222 +291,231 @@ const AdminContent = () => {
 
   if (loading) {
     return (
-      <LoadingContainer>
-        <Spinner size={50} />
-      </LoadingContainer>
+      <div className="flex justify-center p-8">
+        <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   return (
     <AdminWrapper>
-      <PageTitle>User Management</PageTitle>
+      <h1 className="text-2xl font-bold mb-8 max-sm:text-xl max-sm:mb-6">User Management</h1>
 
       {error && (
-        <Callout intent={Intent.DANGER} style={{ marginBottom: '1rem' }}>
-          {error}
-        </Callout>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {success && (
-        <Callout intent={Intent.SUCCESS} style={{ marginBottom: '1rem' }}>
-          {success}
-        </Callout>
+        <Alert variant="success" className="mb-4">
+          <CheckCircle2 className="h-4 w-4" />
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
       )}
 
       <Section>
-        <CreateUserCard>
-          <SectionTitle>Create New User</SectionTitle>
-          <UserForm>
-            <FormGroup label="Username">
-              <InputGroup
-                placeholder="Enter username"
-                value={newUser.username}
-                onChange={handleInputChange('username')}
-                disabled={creating}
-              />
-            </FormGroup>
+        <Card className="mb-8">
+          <CardContent className="p-6 max-sm:p-4">
+            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">Create New User</h3>
+            <UserForm>
+              <div className="space-y-2">
+                <Label>Username</Label>
+                <Input
+                  placeholder="Enter username"
+                  value={newUser.username}
+                  onChange={handleInputChange('username')}
+                  disabled={creating}
+                />
+              </div>
 
-            <FormGroup label="Email">
-              <InputGroup
-                type="email"
-                placeholder="Enter email"
-                value={newUser.email}
-                onChange={handleInputChange('email')}
-                disabled={creating}
-              />
-            </FormGroup>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  value={newUser.email}
+                  onChange={handleInputChange('email')}
+                  disabled={creating}
+                />
+              </div>
 
-            <FormGroup label="Password">
-              <InputGroup
-                type="password"
-                placeholder="Enter password"
-                value={newUser.password}
-                onChange={handleInputChange('password')}
-                disabled={creating}
-              />
-            </FormGroup>
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Enter password"
+                  value={newUser.password}
+                  onChange={handleInputChange('password')}
+                  disabled={creating}
+                />
+              </div>
 
-            <FormGroup label="Role">
-              <HTMLSelect
-                value={newUser.role}
-                onChange={handleInputChange('role')}
-                disabled={creating}
-              >
-                <option value="volunteer">Volunteer</option>
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-              </HTMLSelect>
-            </FormGroup>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={newUser.role}
+                  onValueChange={(val) => handleInputChange('role')({ target: { value: val } })}
+                  disabled={creating}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Button
-              intent={Intent.PRIMARY}
-              text="Create User"
-              loading={creating}
-              onClick={createUser}
-            />
-          </UserForm>
-        </CreateUserCard>
+              <Button onClick={createUser} disabled={creating}>
+                {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create User
+              </Button>
+            </UserForm>
+          </CardContent>
+        </Card>
       </Section>
 
       <Section>
-        <SectionTitle>All Users</SectionTitle>
-        <TableWrapper>
-          <StyledTable striped interactive>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">All Users</h3>
+        <div className="overflow-x-auto border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {users.map((user) => (
-                <tr key={user._id}>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <Tag intent={getRoleColor(user.role)}>{user.role}</Tag>
-                  </td>
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    <HTMLSelect
+                <TableRow key={user._id}>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleColor(user.role)}>{user.role}</Badge>
+                  </TableCell>
+                  <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Select
                       value={user.role}
-                      onChange={(e) => updateUserRole(user._id, e.target.value)}
+                      onValueChange={(val) => updateUserRole(user._id, val)}
                     >
-                      <option value="volunteer">Volunteer</option>
-                      <option value="staff">Staff</option>
-                      <option value="admin">Admin</option>
-                    </HTMLSelect>
-                  </td>
-                </tr>
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="volunteer">Volunteer</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </StyledTable>
-        </TableWrapper>
+            </TableBody>
+          </Table>
+        </div>
       </Section>
 
       {/* Location Management Section */}
       <Section>
-        <LocationCard>
-          <SectionTitle>Create New Location</SectionTitle>
-          <LocationForm>
-            <FormGroup label="Location Name">
-              <InputGroup
-                placeholder="Enter location name"
-                value={newLocation.name}
-                onChange={(e) =>
-                  handleLocationInputChange('name', e.target.value)
-                }
-                disabled={creatingLocation}
-              />
-            </FormGroup>
+        <Card className="mb-8">
+          <CardContent className="p-6 max-sm:p-4">
+            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">Create New Location</h3>
+            <LocationForm>
+              <div className="space-y-2">
+                <Label>Location Name</Label>
+                <Input
+                  placeholder="Enter location name"
+                  value={newLocation.name}
+                  onChange={(e) =>
+                    handleLocationInputChange('name', e.target.value)
+                  }
+                  disabled={creatingLocation}
+                />
+              </div>
 
-            <FormGroup label="Walking Loop">
-              <Switch
-                checked={newLocation.walkable}
-                onChange={(e) =>
-                  handleLocationInputChange('walkable', e.target.checked)
-                }
-                disabled={creatingLocation}
-                label={newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}
-              />
-            </FormGroup>
+              <div className="space-y-2">
+                <Label>Walking Loop</Label>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={newLocation.walkable}
+                    onCheckedChange={(checked) =>
+                      handleLocationInputChange('walkable', checked)
+                    }
+                    disabled={creatingLocation}
+                  />
+                  <span className="text-sm">{newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}</span>
+                </div>
+              </div>
 
-            <Button
-              intent={Intent.PRIMARY}
-              text="Create Location"
-              loading={creatingLocation}
-              onClick={createNewLocation}
-            />
-          </LocationForm>
-        </LocationCard>
+              <Button onClick={createNewLocation} disabled={creatingLocation}>
+                {creatingLocation && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create Location
+              </Button>
+            </LocationForm>
+          </CardContent>
+        </Card>
       </Section>
 
       <Section>
-        <SectionTitle>All Locations</SectionTitle>
+        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">All Locations</h3>
         {locationsLoading ? (
-          <LoadingContainer>
-            <Spinner size={30} />
-          </LoadingContainer>
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
         ) : (
-          <TableWrapper>
-            <StyledTable striped interactive>
-              <thead>
-                <tr>
-                  <th>Location Name</th>
-                  <th>Type</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="overflow-x-auto border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Location Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {locations.map((location) => (
-                  <tr key={location._id || location.id}>
-                    <td>{location.name}</td>
-                    <td>
-                      <Tag
-                        intent={
-                          location.walkable ? Intent.PRIMARY : Intent.SUCCESS
-                        }
-                      >
+                  <TableRow key={location._id || location.id}>
+                    <TableCell>{location.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={location.walkable ? 'default' : 'success'}>
                         {location.walkable ? 'Walking Loop' : 'Pen/Yard'}
-                      </Tag>
-                    </td>
-                    <td>
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '0.5rem',
-                          alignItems: 'center',
-                        }}
-                      >
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
                         <Switch
                           checked={location.walkable}
-                          onChange={() =>
+                          onCheckedChange={() =>
                             updateLocationToggle(
                               location._id || location.id,
                               location.walkable
                             )
                           }
-                          label=""
-                          small
                         />
                         <Button
-                          intent={Intent.DANGER}
-                          text="Delete"
-                          small
+                          variant="destructive"
+                          size="sm"
                           onClick={() =>
                             deleteLocationById(location._id || location.id)
                           }
-                        />
+                        >
+                          Delete
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </StyledTable>
-          </TableWrapper>
+              </TableBody>
+            </Table>
+          </div>
         )}
       </Section>
     </AdminWrapper>

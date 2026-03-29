@@ -2,53 +2,12 @@
 
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  Button,
-  FormGroup,
-  InputGroup,
-  Card,
-  Elevation,
-  Intent,
-  Callout,
-} from '@blueprintjs/core';
-import styled from 'styled-components';
-import { devices } from '../constants/constants';
-
-const LoginWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
-`;
-
-const LoginCard = styled(Card)`
-  width: 100%;
-  max-width: 400px;
-  padding: 2rem;
-
-  @media ${devices.sm} {
-    padding: 1.5rem;
-  }
-`;
-
-const LoginTitle = styled.h1`
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #394b59;
-  font-weight: 600;
-`;
-
-const LoginForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const SubmitButton = styled(Button)`
-  margin-top: 1rem;
-`;
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const { login } = useAuth();
@@ -64,7 +23,6 @@ const Login = () => {
       ...prev,
       [field]: e.target.value,
     }));
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -89,52 +47,66 @@ const Login = () => {
   };
 
   return (
-    <LoginWrapper>
-      <LoginCard elevation={Elevation.TWO}>
-        <LoginTitle>Baypath Volunteer Ops</LoginTitle>
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-indigo-500 to-purple-700 p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-foreground">
+            Baypath Volunteer Ops
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        {error && (
-          <Callout intent={Intent.DANGER} style={{ marginBottom: '1rem' }}>
-            {error}
-          </Callout>
-        )}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange('email')}
+                  disabled={isLoading}
+                  className="pl-9"
+                />
+              </div>
+            </div>
 
-        <LoginForm onSubmit={handleSubmit}>
-          <FormGroup label="Email" labelFor="email">
-            <InputGroup
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleInputChange('email')}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleInputChange('password')}
+                  disabled={isLoading}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
               disabled={isLoading}
-              leftIcon="envelope"
-            />
-          </FormGroup>
-
-          <FormGroup label="Password" labelFor="password">
-            <InputGroup
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              disabled={isLoading}
-              leftIcon="lock"
-            />
-          </FormGroup>
-
-          <SubmitButton
-            type="submit"
-            intent={Intent.PRIMARY}
-            loading={isLoading}
-            text="Sign In"
-            fill
-            large
-          />
-        </LoginForm>
-      </LoginCard>
-    </LoginWrapper>
+              className="w-full mt-2"
+              size="lg"
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

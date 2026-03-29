@@ -1,67 +1,23 @@
 'use client';
 
-import styled from 'styled-components';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
+import { Textarea } from '@/app/components/ui/textarea';
 import {
-  HTMLSelect,
-  Overlay2,
-  Classes,
-  Section,
-  SectionCard,
-  Button,
-  Tag,
-} from '@blueprintjs/core';
-import { devices } from '../constants/constants';
-import { useState, useEffect } from 'react';
-
-const ModalWrapper = styled.div`
-  left: calc(50vw - 17vw);
-  margin: 10vh 0;
-  top: 0;
-  width: 33vw;
-
-  @media ${devices['2xl']} {
-    width: 33vw;
-  }
-  @media ${devices.xl} {
-    width: 33vw;
-  }
-  @media ${devices.lg} {
-    width: 50vw;
-    left: calc(50vw - 22vw);
-  }
-  @media ${devices.md} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.sm} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-  @media ${devices.xs} {
-    width: 95vw;
-    left: calc(50vw - 47vw);
-  }
-`;
-
-const StyledSectionCard = styled(SectionCard)`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-`;
-
-const StyledButton = styled(Button)`
-  margin-right: 5px;
-`;
-
-const NamesContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: center;
-  width: 100%;
-  margin: 7px;
-`;
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/app/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/app/components/ui/select';
 
 const MoveDog = (props) => {
   const {
@@ -73,79 +29,77 @@ const MoveDog = (props) => {
     handleBehaviorNoteChange,
   } = props;
 
-  const NamesContainerFragment = (
-    <NamesContainer>
-      {selectedDogs
-        ? selectedDogs.map((d, index) => (
-            <Tag
-              intent="primary"
-              key={index}
-              large
-              style={{ marginLeft: '5px' }}
-            >
-              {d.name}
-            </Tag>
-          ))
-        : null}
-    </NamesContainer>
-  );
+  const getTitle = () => {
+    switch (type) {
+      case 'move': return 'Move Dog(s)';
+      case 'walk': return 'Start Walk';
+      case 'behaviorNote': return 'New Behavior Note';
+      default: return 'Action';
+    }
+  };
+
+  const NamesFragment = selectedDogs ? (
+    <div className="flex flex-wrap gap-1.5 mb-3">
+      {selectedDogs.map((d, index) => (
+        <Badge key={index} variant="default">
+          {d.name}
+        </Badge>
+      ))}
+    </div>
+  ) : null;
 
   let content;
   switch (type) {
     case 'move':
       content = (
         <>
-          {NamesContainerFragment}
-          <HTMLSelect
-            minimal={true}
-            fill={true}
-            onChange={(e) => handleLocationChange(e)}
-          >
-            <option>Select Destination...</option>
-            {locations
-              .filter((location) => {
-                return !('walkable' in location) || location.walkable == false;
-              })
-              .map((location, index) => (
-                <option key={index} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-          </HTMLSelect>
+          {NamesFragment}
+          <Select onValueChange={(val) => handleLocationChange({ target: { value: val } })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Destination..." />
+            </SelectTrigger>
+            <SelectContent>
+              {locations
+                .filter((location) => !('walkable' in location) || location.walkable == false)
+                .map((location) => (
+                  <SelectItem key={location._id} value={location._id}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </>
       );
       break;
     case 'walk':
       content = (
         <>
-          {NamesContainerFragment}
-          <HTMLSelect
-            minimal={true}
-            fill={true}
-            onChange={(e) => handleLocationChange(e)}
-          >
-            <option>Walk Destination...</option>
-            {locations
-              .filter((location) => {
-                return location.walkable;
-              })
-              .map((location, index) => (
-                <option key={index} value={location._id}>
-                  {location.name}
-                </option>
-              ))}
-          </HTMLSelect>
+          {NamesFragment}
+          <Select onValueChange={(val) => handleLocationChange({ target: { value: val } })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Walk Destination..." />
+            </SelectTrigger>
+            <SelectContent>
+              {locations
+                .filter((location) => location.walkable)
+                .map((location) => (
+                  <SelectItem key={location._id} value={location._id}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </>
       );
       break;
     case 'behaviorNote':
       content = (
         <>
-          {NamesContainerFragment}
-          <textarea
-            class="bp5-input bp5-fill"
+          {NamesFragment}
+          <Textarea
+            placeholder="Write a behavior note..."
             onChange={(e) => handleBehaviorNoteChange(e)}
-          ></textarea>
+          />
         </>
       );
       break;
@@ -154,47 +108,29 @@ const MoveDog = (props) => {
   }
 
   return (
-    <Overlay2
-      isOpen={props.isOpen}
-      className={Classes.OVERLAY_SCROLL_CONTAINER}
-      usePortal={true}
-      canOutsideClickClose={true}
-      onClose={props.toggleOpen}
-    >
-      <ModalWrapper>
-        <Section
-          title={() => getTitle()}
-          rightElement={
-            <Button
-              icon="cross"
-              outlined={false}
-              minimal={true}
-              onClick={props.toggleOpen}
-            />
-          }
-        >
-          <StyledSectionCard>{content}</StyledSectionCard>
-          <SectionCard>
-            <StyledButton
-              intent="primary"
-              minimal={true}
-              outlined={true}
-              onClick={() => handleSubmit(type)}
-            >
-              Submit
-            </StyledButton>
-            <StyledButton
-              intent="danger"
-              minimal={true}
-              outlined={true}
-              onClick={props.toggleOpen}
-            >
-              Cancel
-            </StyledButton>
-          </SectionCard>
-        </Section>
-      </ModalWrapper>
-    </Overlay2>
+    <Dialog open={props.isOpen} onOpenChange={(open) => { if (!open) props.toggleOpen(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{getTitle()}</DialogTitle>
+          <DialogDescription>
+            {type === 'move' ? 'Select a destination to move the selected dogs.' :
+             type === 'walk' ? 'Select a walking destination.' :
+             'Add a behavior note for the selected dogs.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-2">{content}</div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={props.toggleOpen}>
+            Cancel
+          </Button>
+          <Button onClick={() => handleSubmit(type)}>
+            Submit
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
