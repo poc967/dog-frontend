@@ -7,15 +7,13 @@ import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
 
   useEffect(() => {
     if (!loading) {
-      if (isAuthenticated) {
-        router.push('/dogs');
-      }
+      router.replace('/dogs');
     }
-  }, [isAuthenticated, loading, router]);
+  }, [loading, router]);
 
   return (
     <div className="flex justify-center items-center min-h-screen">

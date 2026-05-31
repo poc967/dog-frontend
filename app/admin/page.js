@@ -88,6 +88,35 @@ const UserForm = styled.div`
   }
 `;
 
+const InviteForm = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  gap: 1rem;
+  align-items: end;
+
+  @media ${devices.lg} {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+
+    button {
+      grid-column: 1 / -1;
+      justify-self: center;
+      width: 200px;
+    }
+  }
+
+  @media ${devices.md} {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+
+    button {
+      grid-column: 1;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+  }
+`;
+
 const LocationForm = styled.div`
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -110,12 +139,18 @@ const AdminContent = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
     password: '',
+    role: 'volunteer',
+  });
+  const [inviteUserData, setInviteUserData] = useState({
+    username: '',
+    email: '',
     role: 'volunteer',
   });
 
@@ -187,6 +222,34 @@ const AdminContent = () => {
     }
   };
 
+  const handleInviteInputChange = (field) => (e) => {
+    setInviteUserData((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+    if (error) setError('');
+    if (success) setSuccess('');
+  };
+
+  const sendInvite = async () => {
+    if (!inviteUserData.username || !inviteUserData.email) {
+      setError('Invite requires username and email');
+      return;
+    }
+
+    setInviting(true);
+    try {
+      await axios.post(API_ENDPOINTS.AUTH.INVITE, inviteUserData);
+      setSuccess('Invitation sent successfully');
+      setInviteUserData({ username: '', email: '', role: 'volunteer' });
+      fetchUsers();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to send invite');
+    } finally {
+      setInviting(false);
+    }
+  };
+
   const updateUserRole = async (userId, newRole) => {
     try {
       await axios.put(API_ENDPOINTS.AUTH.USER_BY_ID(userId), { role: newRole });
@@ -253,7 +316,15 @@ const AdminContent = () => {
       setNewLocation({ name: '', walkable: false });
       fetchLocations(); // Refresh the locations list
     } catch (error) {
-      setError(error.message || 'Failed to create location');
+      if (error.status === 409) {
+        setError(
+          error.message ||
+            'Location already exists. The location list has been refreshed.',
+        );
+        fetchLocations();
+      } else {
+        setError(error.message || 'Failed to create location');
+      }
     } finally {
       setCreatingLocation(false);
     }
@@ -265,7 +336,15 @@ const AdminContent = () => {
       setSuccess('Location updated successfully');
       fetchLocations(); // Refresh the locations list
     } catch (error) {
-      setError(error.message || 'Failed to update location');
+      if (error.status === 409) {
+        setError(
+          error.message ||
+            'Location changed by another user. The location list has been refreshed.',
+        );
+        fetchLocations();
+      } else {
+        setError(error.message || 'Failed to update location');
+      }
     }
   };
 
@@ -279,7 +358,15 @@ const AdminContent = () => {
       setSuccess('Location deleted successfully');
       fetchLocations(); // Refresh the locations list
     } catch (error) {
-      setError(error.message || 'Failed to delete location');
+      if (error.status === 409) {
+        setError(
+          error.message ||
+            'Location update conflict detected. The location list has been refreshed.',
+        );
+        fetchLocations();
+      } else {
+        setError(error.message || 'Failed to delete location');
+      }
     }
   };
 
@@ -299,7 +386,9 @@ const AdminContent = () => {
 
   return (
     <AdminWrapper>
-      <h1 className="text-2xl font-bold mb-8 max-sm:text-xl max-sm:mb-6">User Management</h1>
+      <h1 className="text-2xl font-bold mb-8 max-sm:text-xl max-sm:mb-6">
+        User Management
+      </h1>
 
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -318,7 +407,9 @@ const AdminContent = () => {
       <Section>
         <Card className="mb-8">
           <CardContent className="p-6 max-sm:p-4">
-            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">Create New User</h3>
+            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">
+              Create New User
+            </h3>
             <UserForm>
               <div className="space-y-2">
                 <Label>Username</Label>
@@ -356,7 +447,9 @@ const AdminContent = () => {
                 <Label>Role</Label>
                 <Select
                   value={newUser.role}
-                  onValueChange={(val) => handleInputChange('role')({ target: { value: val } })}
+                  onValueChange={(val) =>
+                    handleInputChange('role')({ target: { value: val } })
+                  }
                   disabled={creating}
                 >
                   <SelectTrigger>
@@ -377,10 +470,67 @@ const AdminContent = () => {
             </UserForm>
           </CardContent>
         </Card>
+
+        <Card className="mb-8">
+          <CardContent className="p-6 max-sm:p-4">
+            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">
+              Invite User (Set Password On First Use)
+            </h3>
+            <InviteForm>
+              <div className="space-y-2">
+                <Label>Username</Label>
+                <Input
+                  placeholder="Enter username"
+                  value={inviteUserData.username}
+                  onChange={handleInviteInputChange('username')}
+                  disabled={inviting}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  value={inviteUserData.email}
+                  onChange={handleInviteInputChange('email')}
+                  disabled={inviting}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={inviteUserData.role}
+                  onValueChange={(val) =>
+                    handleInviteInputChange('role')({ target: { value: val } })
+                  }
+                  disabled={inviting}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={sendInvite} disabled={inviting}>
+                {inviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Send Invite
+              </Button>
+            </InviteForm>
+          </CardContent>
+        </Card>
       </Section>
 
       <Section>
-        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">All Users</h3>
+        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">
+          All Users
+        </h3>
         <div className="overflow-x-auto border rounded-md">
           <Table>
             <TableHeader>
@@ -400,7 +550,9 @@ const AdminContent = () => {
                   <TableCell>
                     <Badge variant={getRoleColor(user.role)}>{user.role}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </TableCell>
                   <TableCell>
                     <Select
                       value={user.role}
@@ -427,7 +579,9 @@ const AdminContent = () => {
       <Section>
         <Card className="mb-8">
           <CardContent className="p-6 max-sm:p-4">
-            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">Create New Location</h3>
+            <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">
+              Create New Location
+            </h3>
             <LocationForm>
               <div className="space-y-2">
                 <Label>Location Name</Label>
@@ -451,12 +605,16 @@ const AdminContent = () => {
                     }
                     disabled={creatingLocation}
                   />
-                  <span className="text-sm">{newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}</span>
+                  <span className="text-sm">
+                    {newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}
+                  </span>
                 </div>
               </div>
 
               <Button onClick={createNewLocation} disabled={creatingLocation}>
-                {creatingLocation && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {creatingLocation && (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                )}
                 Create Location
               </Button>
             </LocationForm>
@@ -465,7 +623,9 @@ const AdminContent = () => {
       </Section>
 
       <Section>
-        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">All Locations</h3>
+        <h3 className="text-lg font-semibold mb-4 max-sm:text-base max-sm:mb-3">
+          All Locations
+        </h3>
         {locationsLoading ? (
           <div className="flex justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -485,7 +645,9 @@ const AdminContent = () => {
                   <TableRow key={location._id || location.id}>
                     <TableCell>{location.name}</TableCell>
                     <TableCell>
-                      <Badge variant={location.walkable ? 'default' : 'success'}>
+                      <Badge
+                        variant={location.walkable ? 'default' : 'success'}
+                      >
                         {location.walkable ? 'Walking Loop' : 'Pen/Yard'}
                       </Badge>
                     </TableCell>
@@ -496,7 +658,7 @@ const AdminContent = () => {
                           onCheckedChange={() =>
                             updateLocationToggle(
                               location._id || location.id,
-                              location.walkable
+                              location.walkable,
                             )
                           }
                         />

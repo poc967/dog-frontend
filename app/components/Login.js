@@ -5,7 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/app/components/ui/card';
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
 
@@ -51,7 +56,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-foreground">
-            Baypath Volunteer Ops
+            Baypath Humane Society
           </CardTitle>
         </CardHeader>
         <CardContent>

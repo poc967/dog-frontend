@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/app/components/ui/button';
+import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Input } from '@/app/components/ui/input';
 import {
@@ -11,10 +12,19 @@ import {
   TableRow,
   TableCell,
 } from '@/app/components/ui/table';
-import { Loader2, Plus, Archive, ArrowLeftRight, Footprints, FileText, X } from 'lucide-react';
+import {
+  Loader2,
+  Plus,
+  Archive,
+  ArrowLeftRight,
+  Footprints,
+  FileText,
+  X,
+  AlertCircle,
+} from 'lucide-react';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 // components
 import LevelIndicator from '../components/LevelIndicator';
@@ -83,6 +93,8 @@ const DogsContent = () => {
   const [newLocation, setNewLocation] = useState(null);
   const [locations, setLocations] = useState([]);
   const [behaviorNote, setBehaviorNote] = useState(null);
+  const [actionError, setActionError] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
 
   // useEffect(() => {
   //   const handleResize = () => {
@@ -107,23 +119,24 @@ const DogsContent = () => {
   //   }
   // }, [domSize]);
 
-  useEffect(() => {
-    async function fetchDogs() {
-      if (!token) return; // Wait for token to be available
+  const fetchDogs = useCallback(async () => {
+    if (!token) return;
 
-      setFetchingDogs(true);
-      try {
-        const data = await getDogs(token);
-        setDogs(data.message);
-      } catch (error) {
-        console.error('Error fetching dogs:', error);
-      } finally {
-        setFetchingDogs(false);
-      }
+    setFetchingDogs(true);
+    try {
+      const data = await getDogs(token);
+      setDogs(data.message);
+    } catch (error) {
+      console.error('Error fetching dogs:', error);
+      setActionError('Failed to refresh dogs. Please try again.');
+    } finally {
+      setFetchingDogs(false);
     }
-
-    fetchDogs();
   }, [token]);
+
+  useEffect(() => {
+    fetchDogs();
+  }, [fetchDogs]);
 
   useEffect(() => {
     async function fetchLocations() {
@@ -150,6 +163,8 @@ const DogsContent = () => {
   };
 
   const submitEndWalk = async (dogToUpdate) => {
+    setActionError('');
+    setActionSuccess('');
     setEndingWalkDog(dogToUpdate._id);
 
     try {
@@ -170,11 +185,23 @@ const DogsContent = () => {
                 },
               }
             : dog;
-        })
+        }),
       );
+      setActionSuccess('Walk completed successfully.');
       setEndingWalkDog('');
     } catch (error) {
       console.error('Error ending walk:', error);
+      if (error.status === 409) {
+        setActionError(
+          error.message ||
+            'This walk was already completed by another user. Data has been refreshed.',
+        );
+        await fetchDogs();
+      } else {
+        setActionError(
+          error.message || 'Failed to complete walk. Please try again.',
+        );
+      }
       setEndingWalkDog('');
     }
   };
@@ -186,7 +213,7 @@ const DogsContent = () => {
         break;
       case false:
         setSelectedDogs(
-          selectedDogs.filter((selectedDog) => selectedDog._id !== dog._id)
+          selectedDogs.filter((selectedDog) => selectedDog._id !== dog._id),
         );
         break;
       default:
@@ -196,6 +223,8 @@ const DogsContent = () => {
 
   const handleSubmit = async (type) => {
     const dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
+    setActionError('');
+    setActionSuccess('');
 
     try {
       if (type === 'walk' || type === 'move') {
@@ -224,7 +253,12 @@ const DogsContent = () => {
                   location: newLocationObj,
                 }
               : dog;
-          })
+          }),
+        );
+        setActionSuccess(
+          modalType === 'walk'
+            ? 'Walk started successfully.'
+            : 'Location updated successfully.',
         );
       }
 
@@ -235,16 +269,26 @@ const DogsContent = () => {
         };
 
         await createBehaviorNote(body, token);
+        setActionSuccess('Behavior note created successfully.');
       }
+
+      // close the modal
+      await toggleModalOpen();
+      // reset selected dogs
+      await setSelectedDogs([]);
+      await setNewLocation(null);
     } catch (error) {
       console.error('Error submitting:', error);
+      if (error.status === 409) {
+        setActionError(
+          error.message ||
+            'This action conflicted with another update. Data has been refreshed.',
+        );
+        await fetchDogs();
+      } else {
+        setActionError(error.message || 'Unable to submit update.');
+      }
     }
-
-    // close the modal
-    await toggleModalOpen();
-    // reset selected dogs
-    await setSelectedDogs([]);
-    await setNewLocation(null);
   };
 
   const handleLocationChange = async (e) => {
@@ -256,6 +300,8 @@ const DogsContent = () => {
   };
 
   const handleSubmitNote = async (e) => {
+    setActionError('');
+    setActionSuccess('');
     try {
       const dogIds = selectedDogs.map((selectedDog) => selectedDog._id);
       const body = {
@@ -264,6 +310,7 @@ const DogsContent = () => {
       };
 
       await createBehaviorNote(body, token);
+      setActionSuccess('Behavior note created successfully.');
 
       // close the modal
       toggleModalOpen();
@@ -271,10 +318,21 @@ const DogsContent = () => {
       setSelectedDogs([]);
     } catch (error) {
       console.error('Error creating behavior note:', error);
+      if (error.status === 409) {
+        setActionError(
+          error.message ||
+            'Conflict detected while creating note. Data has been refreshed.',
+        );
+        await fetchDogs();
+      } else {
+        setActionError(error.message || 'Failed to create behavior note.');
+      }
     }
   };
 
   const handleAddDog = async (dogData) => {
+    setActionError('');
+    setActionSuccess('');
     try {
       const body = {
         name: dogData.name,
@@ -293,15 +351,19 @@ const DogsContent = () => {
 
       // Close the modal
       setAddDogModalOpen(false);
+      setActionSuccess('Dog added successfully.');
 
       // Show success message (optional)
     } catch (error) {
       console.error('Error adding dog:', error);
+      setActionError(error.message || 'Failed to add dog.');
     }
   };
 
   const handleRemoveDogs = async () => {
     const dogIds = selectedDogs.map((selectedDogs) => selectedDogs._id);
+    setActionError('');
+    setActionSuccess('');
 
     try {
       const res = await removeDogs(dogIds, token);
@@ -314,14 +376,36 @@ const DogsContent = () => {
 
         // Reset selected dogs
         setSelectedDogs([]);
+        setActionSuccess('Selected dogs archived successfully.');
       }
     } catch (error) {
       console.error('Error removing dogs:', error);
+      if (error.status === 409) {
+        setActionError(
+          error.message ||
+            'Archive conflict detected. Data has been refreshed.',
+        );
+        await fetchDogs();
+      } else {
+        setActionError(error.message || 'Failed to archive selected dogs.');
+      }
     }
   };
 
   return (
     <Wrapper>
+      {actionError ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{actionError}</AlertDescription>
+        </Alert>
+      ) : null}
+      {actionSuccess ? (
+        <Alert variant="success" className="mb-4">
+          <AlertDescription>{actionSuccess}</AlertDescription>
+        </Alert>
+      ) : null}
+
       <MoveDog
         isOpen={moveDogModalOpen}
         toggleOpen={toggleModalOpen}
@@ -427,13 +511,16 @@ const DogsContent = () => {
                         handleSelectDog(dog, { target: { checked } })
                       }
                       checked={selectedDogs.some(
-                        (selectedDog) => selectedDog._id === dog._id
+                        (selectedDog) => selectedDog._id === dog._id,
                       )}
                       disabled={dog.isWalking}
                     />
                   </TableCell>
                   <TableCell>
-                    <Link href={`/dogs/${dog._id}`} className="text-primary hover:underline">
+                    <Link
+                      href={`/dogs/${dog._id}`}
+                      className="text-primary hover:underline"
+                    >
                       {dog.name}
                     </Link>
                   </TableCell>
@@ -447,7 +534,9 @@ const DogsContent = () => {
                   <TableCell>
                     <span
                       className={
-                        endingWalkDog == dog._id ? 'animate-pulse bg-muted rounded px-2 py-1' : ''
+                        endingWalkDog == dog._id
+                          ? 'animate-pulse bg-muted rounded px-2 py-1'
+                          : ''
                       }
                     >
                       {dog.location.name}

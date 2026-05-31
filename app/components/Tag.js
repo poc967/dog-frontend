@@ -6,23 +6,26 @@ import { useAuth } from '../contexts/AuthContext';
 const Tags = (props) => {
   const { hasRole } = useAuth();
   const { alert, tab, submitDeleteWhiteboard, allDogs } = props;
-  
+
   // For friends, the data structure is different - friends are stored as full objects
-  const displayText = tab === 'Friends' ? 
-    (alert.name ? alert.name : alert.text || 'Unknown Friend') : 
-    alert.text;
-  
+  const displayText =
+    tab === 'Friends'
+      ? alert.name
+        ? alert.name
+        : alert.text || 'Unknown Friend'
+      : alert.text;
+
   const showImage = tab === 'Friends' && alert.imageUrl;
-  
+
   return (
     <Badge
-      variant={mapColorToVariant(alert.priority || alert.level1 || 'info')}
+      variant={mapColorToVariant(alert.priority || alert.level1 || 'blue')}
       className="mb-1 ml-1 gap-1.5 py-1 px-2.5"
     >
       <span className="flex items-center gap-1.5">
         {showImage && (
-          <img 
-            src={alert.imageUrl} 
+          <img
+            src={alert.imageUrl}
             alt={alert.name}
             className="w-5 h-5 rounded-full object-cover"
             onError={(e) => {

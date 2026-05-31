@@ -6,6 +6,28 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
+const decodeTokenPayload = (jwtToken) => {
+  try {
+    const base64Url = jwtToken.split('.')[1];
+    if (!base64Url) return null;
+
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const paddedBase64 = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      '=',
+    );
+
+    return JSON.parse(atob(paddedBase64));
+  } catch (error) {
+    return null;
+  }
+};
+
+const getTokenExpiryMs = (jwtToken) => {
+  const payload = decodeTokenPayload(jwtToken);
+  return payload?.exp ? payload.exp * 1000 : null;
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -25,13 +47,30 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('authUser');
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      // Set default authorization header for axios
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      const expiresAt = getTokenExpiryMs(storedToken);
+
+      if (expiresAt && expiresAt <= Date.now()) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+        delete axios.defaults.headers.common['Authorization'];
+      } else {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        // Set default authorization header for axios
+        axios.defaults.headers.common['Authorization'] =
+          `Bearer ${storedToken}`;
+      }
     }
     setLoading(false);
   }, []);
+
+  const setAuthSession = ({ user: userData, token: authToken }) => {
+    setUser(userData);
+    setToken(authToken);
+    localStorage.setItem('authToken', authToken);
+    localStorage.setItem('authUser', JSON.stringify(userData));
+    axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+  };
 
   const login = async (email, password) => {
     try {
@@ -41,17 +80,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       const { user: userData, token: authToken } = response.data.data;
-
-      // Store in state
-      setUser(userData);
-      setToken(authToken);
-
-      // Store in localStorage
-      localStorage.setItem('authToken', authToken);
-      localStorage.setItem('authUser', JSON.stringify(userData));
-
-      // Set default authorization header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+      setAuthSession({ user: userData, token: authToken });
 
       return { success: true, user: userData };
     } catch (error) {
@@ -75,6 +104,26 @@ export const AuthProvider = ({ children }) => {
     // Remove default authorization header
     delete axios.defaults.headers.common['Authorization'];
   };
+
+  // Auto logout when token reaches expiry time
+  useEffect(() => {
+    if (!token) return;
+
+    const expiresAt = getTokenExpiryMs(token);
+    if (!expiresAt) return;
+
+    const timeoutMs = expiresAt - Date.now();
+    if (timeoutMs <= 0) {
+      logout();
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      logout();
+    }, timeoutMs);
+
+    return () => clearTimeout(timeoutId);
+  }, [token]);
 
   const updateProfile = async (profileData) => {
     try {
@@ -111,6 +160,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const activateInvite = async (activationToken, password) => {
+    try {
+      const response = await axios.post(API_ENDPOINTS.AUTH.ACTIVATE, {
+        token: activationToken,
+        password,
+      });
+
+      const { user: userData, token: authToken } = response.data.data;
+      setAuthSession({ user: userData, token: authToken });
+
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error('Activation error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Activation failed',
+      };
+    }
+  };
+
   // Role checking utilities
   const hasRole = (requiredRole) => {
     if (!user) return false;
@@ -136,6 +205,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     changePassword,
+    activateInvite,
     hasRole,
     isAdmin,
     isStaff,

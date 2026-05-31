@@ -40,14 +40,15 @@ const NavigationBar = () => {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 py-2 border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-      <Link href="/" className="text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity">
-        Baypath Volunteer Ops
+      <Link
+        href="/"
+        className="text-lg font-semibold tracking-tight hover:opacity-80 transition-opacity"
+      >
+        Baypath Humane Society
       </Link>
 
       <div className="flex items-center gap-3">
-        <Badge variant={mapRoleToVariant(user?.role)}>
-          {user?.role}
-        </Badge>
+        <Badge variant={mapRoleToVariant(user?.role)}>{user?.role}</Badge>
 
         {isUsernameTruncated(user?.username) ? (
           <Tooltip>
@@ -59,7 +60,9 @@ const NavigationBar = () => {
             <TooltipContent>{user?.username}</TooltipContent>
           </Tooltip>
         ) : (
-          <span className="text-sm text-muted-foreground">{user?.username}</span>
+          <span className="text-sm text-muted-foreground">
+            {user?.username}
+          </span>
         )}
 
         <ThemeToggle />
@@ -73,14 +76,20 @@ const NavigationBar = () => {
           <DropdownMenuContent align="end" className="w-48">
             {user?.role === 'admin' && (
               <DropdownMenuItem asChild>
-                <Link href="/admin" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <LayoutDashboard className="h-4 w-4" />
                   Admin Dashboard
                 </Link>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <Link href="/user" className="flex items-center gap-2 cursor-pointer">
+              <Link
+                href="/user"
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <User className="h-4 w-4" />
                 Profile
               </Link>

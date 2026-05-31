@@ -1,10 +1,25 @@
-export function mapColorToIntent(priority) {
-  switch (priority) {
-    case 'danger':
-      return 'danger';
+export function normalizePriority(priority) {
+  const normalized = (priority || '').toLowerCase();
+
+  switch (normalized) {
     case 'good':
-      return 'success';
+      return 'green';
     case 'info':
+      return 'blue';
+    case 'danger':
+      return 'red';
+    default:
+      return normalized;
+  }
+}
+
+export function mapColorToIntent(priority) {
+  switch (normalizePriority(priority)) {
+    case 'red':
+      return 'danger';
+    case 'green':
+      return 'success';
+    case 'blue':
       return 'primary';
     default:
       break;
@@ -12,12 +27,12 @@ export function mapColorToIntent(priority) {
 }
 
 export function mapColorToVariant(priority) {
-  switch (priority) {
-    case 'danger':
+  switch (normalizePriority(priority)) {
+    case 'red':
       return 'danger';
-    case 'good':
+    case 'green':
       return 'success';
-    case 'info':
+    case 'blue':
       return 'info';
     default:
       return 'secondary';
