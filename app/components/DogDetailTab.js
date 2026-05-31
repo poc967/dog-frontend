@@ -8,6 +8,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { DETAIL_CATEGORIES, PRIORITIES } from '../constants/constants';
+import { normalizePriority } from '../helpers/helpers';
 import { Plus } from 'lucide-react';
 
 // Components
@@ -29,7 +30,10 @@ const DogDetailTab = (props) => {
               <div className="flex items-center gap-2">
                 <span>{tab}</span>
                 {activeCount > 0 && (
-                  <Badge variant="destructive" className="rounded-full text-xs px-2 py-0">
+                  <Badge
+                    variant="destructive"
+                    className="rounded-full text-xs px-2 py-0"
+                  >
                     {activeCount}
                   </Badge>
                 )}
@@ -40,37 +44,40 @@ const DogDetailTab = (props) => {
                 {items.length !== 0 ? (
                   <div>
                     <div>
-                      {tab === 'Friends' ? (
-                        items
-                          .filter((friend) => !friend.isDeleted)
-                          .map((friend, index) => (
-                            <Tags
-                              key={index}
-                              alert={friend}
-                              tab={tab}
-                              submitDeleteWhiteboard={submitDeleteWhiteboard}
-                              allDogs={allDogs}
-                            />
-                          ))
-                      ) : (
-                        PRIORITIES.map((priority, index) => (
-                          <div key={index}>
-                            {items
-                              .filter((a) => a.priority === priority)
-                              .map((alert, index) =>
-                                alert && !alert.isDeleted ? (
-                                  <Tags
-                                    key={index}
-                                    alert={alert}
-                                    tab={tab}
-                                    submitDeleteWhiteboard={submitDeleteWhiteboard}
-                                    allDogs={allDogs}
-                                  />
-                                ) : null
-                              )}
-                          </div>
-                        ))
-                      )}
+                      {tab === 'Friends'
+                        ? items
+                            .filter((friend) => !friend.isDeleted)
+                            .map((friend, index) => (
+                              <Tags
+                                key={index}
+                                alert={friend}
+                                tab={tab}
+                                submitDeleteWhiteboard={submitDeleteWhiteboard}
+                                allDogs={allDogs}
+                              />
+                            ))
+                        : PRIORITIES.map((priority, index) => (
+                            <div key={index}>
+                              {items
+                                .filter(
+                                  (a) =>
+                                    normalizePriority(a.priority) === priority,
+                                )
+                                .map((alert, index) =>
+                                  alert && !alert.isDeleted ? (
+                                    <Tags
+                                      key={index}
+                                      alert={alert}
+                                      tab={tab}
+                                      submitDeleteWhiteboard={
+                                        submitDeleteWhiteboard
+                                      }
+                                      allDogs={allDogs}
+                                    />
+                                  ) : null,
+                                )}
+                            </div>
+                          ))}
                     </div>
                     <Badge
                       variant="outline"

@@ -12,7 +12,7 @@ export const DOG_HEADER_TABS = [
   'QR Code',
 ];
 
-export const PRIORITIES = ['danger', 'good', 'info'];
+export const PRIORITIES = ['green', 'blue', 'red'];
 
 const breakpoints = {
   xs: '320px',

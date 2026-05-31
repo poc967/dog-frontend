@@ -23,9 +23,11 @@ export const API_ENDPOINTS = {
   // Authentication endpoints
   AUTH: {
     LOGIN: `${API_BASE_URL}/auth/login`,
+    ACTIVATE: `${API_BASE_URL}/auth/activate`,
     PROFILE: `${API_BASE_URL}/auth/profile`,
     CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
     REGISTER: `${API_BASE_URL}/auth/register`,
+    INVITE: `${API_BASE_URL}/auth/invite`,
     USERS: `${API_BASE_URL}/auth/users`,
     USER_BY_ID: (id) => `${API_BASE_URL}/auth/users/${id}`,
   },

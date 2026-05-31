@@ -2,6 +2,25 @@
 
 import { API_ENDPOINTS } from '../config/api';
 
+const buildApiError = async (res, fallbackMessage) => {
+  let message = fallbackMessage;
+
+  try {
+    const errorPayload = await res.json();
+    message =
+      errorPayload?.message ||
+      errorPayload?.data ||
+      errorPayload?.error ||
+      fallbackMessage;
+  } catch (parseError) {
+    message = fallbackMessage;
+  }
+
+  const error = new Error(message);
+  error.status = res.status;
+  return error;
+};
+
 function getAuthHeaders(token) {
   if (!token) {
     throw new Error('Authentication token is required');
@@ -23,13 +42,13 @@ export async function createDog(dogData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to create dog');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to create dog:', error);
-    throw new Error('Failed to create dog');
+    throw error;
   }
 }
 
@@ -46,13 +65,13 @@ export async function removeDogs(dogIds, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to delete dogs');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to delete dogs:', error);
-    throw new Error('Failed to delete dogs');
+    throw error;
   }
 }
 
@@ -66,13 +85,13 @@ export async function moveOrWalkDogs(dogsData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to move/walk dogs');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to move/walk dogs:', error);
-    throw new Error('Failed to move/walk dogs');
+    throw error;
   }
 }
 
@@ -86,13 +105,13 @@ export async function completeWalk(walkData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to complete walk');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to complete walk:', error);
-    throw new Error('Failed to complete walk');
+    throw error;
   }
 }
 
@@ -106,13 +125,13 @@ export async function createBehaviorNote(noteData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to create behavior note');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to create behavior note:', error);
-    throw new Error('Failed to create behavior note');
+    throw error;
   }
 }
 
@@ -125,12 +144,12 @@ export async function getLocations(token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch locations');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to fetch locations:', error);
-    throw new Error('Failed to fetch locations');
+    throw error;
   }
 }

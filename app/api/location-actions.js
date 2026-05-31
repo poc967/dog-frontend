@@ -2,6 +2,25 @@
 
 import { API_ENDPOINTS } from '../config/api';
 
+const buildApiError = async (res, fallbackMessage) => {
+  let message = fallbackMessage;
+
+  try {
+    const errorPayload = await res.json();
+    message =
+      errorPayload?.message ||
+      errorPayload?.data ||
+      errorPayload?.error ||
+      fallbackMessage;
+  } catch (parseError) {
+    message = fallbackMessage;
+  }
+
+  const error = new Error(message);
+  error.status = res.status;
+  return error;
+};
+
 function getAuthHeaders(token) {
   if (!token) {
     throw new Error('Authentication token is required');
@@ -23,13 +42,13 @@ export async function createLocation(locationData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to create location');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to create location:', error);
-    throw new Error('Failed to create location');
+    throw error;
   }
 }
 
@@ -43,13 +62,13 @@ export async function updateLocation(locationId, locationData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to update location');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to update location:', error);
-    throw new Error('Failed to update location');
+    throw error;
   }
 }
 
@@ -62,13 +81,13 @@ export async function deleteLocation(locationId, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to delete location');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to delete location:', error);
-    throw new Error('Failed to delete location');
+    throw error;
   }
 }
 
@@ -81,12 +100,12 @@ export async function getAllLocations(token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch locations');
     }
 
     return res.json();
   } catch (error) {
     console.error('Failed to fetch locations:', error);
-    throw new Error('Failed to fetch locations');
+    throw error;
   }
 }

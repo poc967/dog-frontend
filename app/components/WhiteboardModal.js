@@ -38,15 +38,24 @@ const AddAlert = (props) => {
   } = props;
 
   const isFriendsTab = tab === 'Friends';
-  const isValid = isFriendsTab ? selectedFriend : (newWhiteBoardNote.trim() && newWhiteBoardCategory);
+  const isValid = isFriendsTab
+    ? selectedFriend
+    : newWhiteBoardNote.trim() && newWhiteBoardCategory;
 
   return (
-    <Dialog open={props.isOpen} onOpenChange={(open) => { if (!open) toggleAlertsModalIsOpen(); }}>
+    <Dialog
+      open={props.isOpen}
+      onOpenChange={(open) => {
+        if (!open) toggleAlertsModalIsOpen();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isFriendsTab ? 'Add Friend' : 'Add Alert'}</DialogTitle>
           <DialogDescription>
-            {isFriendsTab ? 'Select a friend for this dog.' : 'Add a new alert or note.'}
+            {isFriendsTab
+              ? 'Select a friend for this dog.'
+              : 'Add a new alert or note.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -61,7 +70,9 @@ const AddAlert = (props) => {
           {isFriendsTab ? (
             <Select
               value={selectedFriend}
-              onValueChange={(val) => handleFriendChange({ target: { value: val } })}
+              onValueChange={(val) =>
+                handleFriendChange({ target: { value: val } })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a friend..." />
@@ -77,15 +88,17 @@ const AddAlert = (props) => {
           ) : (
             <Select
               value={newWhiteBoardCategory}
-              onValueChange={(val) => handleNewCategoryChange({ target: { value: val } })}
+              onValueChange={(val) =>
+                handleNewCategoryChange({ target: { value: val } })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a Category..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="good">Good</SelectItem>
-                <SelectItem value="info">Info</SelectItem>
-                <SelectItem value="danger">Alert</SelectItem>
+                <SelectItem value="green">Green</SelectItem>
+                <SelectItem value="blue">Blue</SelectItem>
+                <SelectItem value="red">Red</SelectItem>
               </SelectContent>
             </Select>
           )}
