@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:8080';
   }
-  return 'https://still-garden-24228-4efab39a388a.herokuapp.com';
+  return 'https://api.usedailypaws.com';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
