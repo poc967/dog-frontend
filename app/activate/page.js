@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
@@ -15,7 +15,7 @@ import {
 import { Alert, AlertDescription } from '@/app/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-export default function ActivatePage() {
+function ActivatePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { activateInvite } = useAuth();
@@ -132,5 +132,21 @@ export default function ActivatePage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ActivatePageFallback() {
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-sky-500 to-teal-700 p-4">
+      <Loader2 className="h-10 w-10 animate-spin text-white" />
+    </div>
+  );
+}
+
+export default function ActivatePage() {
+  return (
+    <Suspense fallback={<ActivatePageFallback />}>
+      <ActivatePageContent />
+    </Suspense>
   );
 }
