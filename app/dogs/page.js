@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 // components
 import LevelIndicator from '../components/LevelIndicator';
@@ -95,6 +95,40 @@ const DogsContent = () => {
   const [behaviorNote, setBehaviorNote] = useState(null);
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const getOutStatusClasses = (status) => {
+    switch (status) {
+      case 'on_walk':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      case 'due_soon':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100';
+      case 'overdue':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+      default:
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100';
+    }
+  };
+
+  const filteredDogs = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return dogs;
+
+    return dogs.filter((dog) => {
+      const searchableValues = [
+        dog.name,
+        dog.location?.name,
+        dog.level1,
+        dog.level2,
+      ];
+
+      return searchableValues.some((value) =>
+        String(value || '')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      );
+    });
+  }, [dogs, searchQuery]);
 
   // useEffect(() => {
   //   const handleResize = () => {
@@ -179,6 +213,12 @@ const DogsContent = () => {
             ? {
                 ...dog,
                 isWalking: false,
+                lastOutAt: new Date().toISOString(),
+                lastOutType: 'walk',
+                outStatus: 'returned',
+                outStatusLabel: 'Returned',
+                outElapsedMinutes: 0,
+                dueInMinutes: Number(dog.targetOutIntervalMinutes) || 240,
                 location: {
                   ...res.data.location,
                   name: res.data.location.name,
@@ -246,10 +286,22 @@ const DogsContent = () => {
 
         setDogs(
           dogs.map((dog) => {
+            const isWalkStart = modalType === 'walk';
+
             return dogIds.includes(dog._id)
               ? {
                   ...dog,
-                  isWalking: modalType === 'walk' ? true : false,
+                  isWalking: isWalkStart ? true : false,
+                  ...(isWalkStart
+                    ? {
+                        lastOutAt: new Date().toISOString(),
+                        lastOutType: 'walk',
+                        outStatus: 'on_walk',
+                        outStatusLabel: 'Out now',
+                        outElapsedMinutes: 0,
+                        dueInMinutes: null,
+                      }
+                    : {}),
                   location: newLocationObj,
                 }
               : dog;
@@ -448,7 +500,26 @@ const DogsContent = () => {
       </div>
       <div className="flex flex-row justify-between mb-2.5 max-sm:flex-col">
         <div className="w-[35%] max-sm:w-full max-sm:mb-2">
-          <Input placeholder="Search..." className="h-8" />
+          <div className="relative">
+          <Input
+            placeholder="Search by name, location, or level..."
+            className="h-8 pr-8"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+            {searchQuery ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
         </div>
         {hasRole('staff') && (
           <div className="flex gap-1 min-w-[12rem]">
@@ -490,20 +561,21 @@ const DogsContent = () => {
               <TableHead>Name</TableHead>
               <TableHead>Level</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead className="max-sm:hidden">Out Status</TableHead>
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {fetchingDogs ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <div className="flex justify-center items-center p-8">
                     <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
                   </div>
                 </TableCell>
               </TableRow>
-            ) : dogs.length !== 0 ? (
-              dogs.map((dog, index) => (
+            ) : filteredDogs.length !== 0 ? (
+              filteredDogs.map((dog, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     <Checkbox
@@ -541,6 +613,49 @@ const DogsContent = () => {
                     >
                       {dog.location.name}
                     </span>
+                    <div className="mt-1 flex flex-col gap-1 sm:hidden">
+                      <span
+                        className={`inline-flex w-fit rounded px-2 py-0.5 text-xs font-medium ${getOutStatusClasses(
+                          dog.outStatus,
+                        )}`}
+                      >
+                        {dog.outStatusLabel || 'Unknown'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {dog.outStatus === 'on_walk' &&
+                        typeof dog.outElapsedMinutes === 'number'
+                          ? `Out ${dog.outElapsedMinutes}m`
+                          : typeof dog.outElapsedMinutes === 'number'
+                            ? `Out ${dog.outElapsedMinutes}m ago`
+                            : 'No recent out'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-sm:hidden">
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`inline-flex w-fit rounded px-2 py-0.5 text-xs font-medium ${getOutStatusClasses(
+                          dog.outStatus,
+                        )}`}
+                      >
+                        {dog.outStatusLabel || 'Unknown'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {dog.outStatus === 'on_walk' &&
+                        typeof dog.outElapsedMinutes === 'number'
+                          ? `Out ${dog.outElapsedMinutes}m`
+                          : typeof dog.outElapsedMinutes === 'number'
+                            ? `Out ${dog.outElapsedMinutes}m ago`
+                            : 'No recent out'}
+                      </span>
+                      {typeof dog.dueInMinutes === 'number' ? (
+                        <span className="text-xs text-muted-foreground">
+                          {dog.dueInMinutes <= 0
+                            ? 'Due now'
+                            : `Due in ${dog.dueInMinutes}m`}
+                        </span>
+                      ) : null}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {dog.isWalking ? (
@@ -548,10 +663,11 @@ const DogsContent = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => submitEndWalk(dog)}
-                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground max-sm:px-2"
                       >
-                        <X className="h-4 w-4 mr-1" />
-                        End walk
+                        <X className="h-4 w-4 mr-1 max-sm:mr-1" />
+                        <span className="max-sm:inline hidden">End</span>
+                        <span className="max-sm:hidden">End walk</span>
                       </Button>
                     ) : null}
                   </TableCell>
@@ -559,7 +675,7 @@ const DogsContent = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <div className="flex justify-center items-center p-8 text-muted-foreground">
                     No dogs found
                   </div>
