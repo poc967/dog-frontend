@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
 import { createNote } from '../api/notes';
-import { createAlert, deleteWhiteboard, getDogs, addFriend, deleteFriend } from '../api/dog';
+import { createAlert, deleteWhiteboard, getDogs, addFriend, deleteFriend, getActivity, updateDog } from '../api/dog';
+import EditDogModal from './EditDogModal';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,6 +66,11 @@ const TabPanelRenderer = ({
   toggleAlertsModalIsOpen,
   submitDeleteWhiteboard,
   allDogs,
+  selectedDate,
+  onPrevDay,
+  onNextDay,
+  onDateChange,
+  activityLoading,
 }) => {
   const Component = tabComponentMap[toSnakeCase(tabName)];
   return Component ? (
@@ -78,6 +84,11 @@ const TabPanelRenderer = ({
       toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
       submitDeleteWhiteboard={submitDeleteWhiteboard}
       allDogs={allDogs}
+      selectedDate={selectedDate}
+      onPrevDay={onPrevDay}
+      onNextDay={onNextDay}
+      onDateChange={onDateChange}
+      activityLoading={activityLoading}
     />
   ) : null;
 };
@@ -96,6 +107,15 @@ const SingleDog = (props) => {
   const [tab, setTab] = useState(null);
   const [allDogs, setAllDogs] = useState([]);
 
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
   useEffect(() => {
     const fetchAllDogs = async () => {
       if (!props.token) return;
@@ -111,6 +131,55 @@ const SingleDog = (props) => {
 
     fetchAllDogs();
   }, [props.token, dog._id]);
+
+  useEffect(() => {
+    const fetchActivityData = async () => {
+      if (!props.token || !props.dogId) return;
+      setActivityLoading(true);
+      try {
+        const data = await getActivity(props.dogId, props.token, selectedDate);
+        setActivityHistory(data);
+      } catch (error) {
+        console.error('Error fetching activity:', error);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+    fetchActivityData();
+  }, [props.token, props.dogId, selectedDate]);
+
+  const handlePrevDay = () => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
+  };
+
+  const handleNextDay = () => {
+    setSelectedDate((prev) => {
+      const today = todayStr();
+      if (prev >= today) return prev;
+      const d = new Date(prev + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
+  };
+
+  const handleSaveDog = async (formData) => {
+    setEditSaving(true);
+    try {
+      const res = await updateDog(props.dogId, formData, props.token);
+      if (res.isSuccessful) {
+        setDog(res.message);
+        setEditOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to update dog:', error);
+    } finally {
+      setEditSaving(false);
+    }
+  };
 
   const handleChange = async (e) => {
     await setNewNote(e.target.value);
@@ -215,6 +284,13 @@ const SingleDog = (props) => {
           tab={tab}
           allDogs={allDogs}
         />
+        <EditDogModal
+          isOpen={editOpen}
+          onClose={() => setEditOpen(false)}
+          dog={dog}
+          onSave={handleSaveDog}
+          isSaving={editSaving}
+        />
         <nav className="flex items-center text-sm text-muted-foreground mb-2">
           <Link href="/dogs/" className="hover:text-foreground transition-colors">
             Dogs
@@ -222,7 +298,10 @@ const SingleDog = (props) => {
           <ChevronRight className="h-4 w-4 mx-1" />
           <span className="text-foreground font-medium">{dog.name}</span>
         </nav>
-        <DogHeaderCard dog={dog} />
+        <DogHeaderCard
+          dog={dog}
+          onEdit={props.canEdit ? () => setEditOpen(true) : undefined}
+        />
         <Tabs value={currentSelectedTab} onValueChange={setCurrentSelectedTab}>
           <TabsList className="w-full overflow-x-auto justify-start">
             {DOG_HEADER_TABS.map((tab) => (
@@ -246,6 +325,11 @@ const SingleDog = (props) => {
                 handleNewCategoryChange={handleNewCategoryChange}
                 submitDeleteWhiteboard={submitDeleteWhiteboard}
                 allDogs={allDogs}
+                selectedDate={selectedDate}
+                onPrevDay={handlePrevDay}
+                onNextDay={handleNextDay}
+                onDateChange={setSelectedDate}
+                activityLoading={activityLoading}
               />
             </TabsContent>
           ))}

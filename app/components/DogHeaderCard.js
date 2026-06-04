@@ -7,7 +7,7 @@ import {
 } from '@/app/components/ui/dialog';
 import Image from 'next/image';
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Pencil } from 'lucide-react';
 
 // components
 import LevelIndicator from './LevelIndicator';
@@ -53,6 +53,15 @@ const DogHeaderCard = (props) => {
                 color1={props.dog.level1}
                 color2={props.dog.level2}
               />
+              {props.onEdit && (
+                <button
+                  onClick={props.onEdit}
+                  className="ml-2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Edit dog details"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
             <div className="flex items-center mt-1">
               <MapPin className="h-4 w-4 mr-1.5 text-destructive" />

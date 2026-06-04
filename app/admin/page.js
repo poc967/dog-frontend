@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
+import { Textarea } from '@/app/components/ui/textarea';
 import { Badge } from '@/app/components/ui/badge';
 import { Switch } from '@/app/components/ui/switch';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -134,6 +135,20 @@ const LocationForm = styled.div`
   }
 `;
 
+const getDefaultInviteUserData = () => ({
+  username: '',
+  email: '',
+  role: 'volunteer',
+  emailTemplate: 'basic',
+  pilotTitle: 'Baypath Humane Society DailyPaws Pilot',
+  pilotPurpose:
+    'Baypath Humane Society is launching this pilot to make volunteer handoffs clearer, reduce missed updates, and help every dog get timely, consistent care.',
+  pilotExpectations:
+    'Use DailyPaws during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog\'s current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.',
+    pilotContactName: 'Pat',
+    pilotContactEmail: 'pat@usedailypaws.com or support@usedailypaws.com',
+});
+
 const AdminContent = () => {
   const { token } = useAuth();
   const [users, setUsers] = useState([]);
@@ -148,11 +163,7 @@ const AdminContent = () => {
     password: '',
     role: 'volunteer',
   });
-  const [inviteUserData, setInviteUserData] = useState({
-    username: '',
-    email: '',
-    role: 'volunteer',
-  });
+  const [inviteUserData, setInviteUserData] = useState(getDefaultInviteUserData);
 
   // Location management state
   const [locations, setLocations] = useState([]);
@@ -237,11 +248,19 @@ const AdminContent = () => {
       return;
     }
 
+    const payload = {
+      ...inviteUserData,
+      pilotExpectations: String(inviteUserData.pilotExpectations || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean),
+    };
+
     setInviting(true);
     try {
-      await axios.post(API_ENDPOINTS.AUTH.INVITE, inviteUserData);
+      await axios.post(API_ENDPOINTS.AUTH.INVITE, payload);
       setSuccess('Invitation sent successfully');
-      setInviteUserData({ username: '', email: '', role: 'volunteer' });
+      setInviteUserData(getDefaultInviteUserData());
       fetchUsers();
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to send invite');
@@ -518,11 +537,88 @@ const AdminContent = () => {
                 </Select>
               </div>
 
+              <div className="space-y-2">
+                <Label>Email Template</Label>
+                <Select
+                  value={inviteUserData.emailTemplate}
+                  onValueChange={(val) =>
+                    handleInviteInputChange('emailTemplate')({
+                      target: { value: val },
+                    })
+                  }
+                  disabled={inviting}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Basic Invite</SelectItem>
+                    <SelectItem value="pilot">Pilot Onboarding Invite</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button onClick={sendInvite} disabled={inviting}>
                 {inviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Send Invite
               </Button>
             </InviteForm>
+
+            {inviteUserData.emailTemplate === 'pilot' && (
+              <div className="mt-4 grid gap-3">
+                <div className="space-y-2">
+                  <Label>Pilot Title</Label>
+                  <Input
+                    placeholder="e.g. Baypath DailyPaws Summer Pilot"
+                    value={inviteUserData.pilotTitle}
+                    onChange={handleInviteInputChange('pilotTitle')}
+                    disabled={inviting}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Pilot Purpose</Label>
+                  <Textarea
+                    placeholder="Why we are doing this pilot"
+                    value={inviteUserData.pilotPurpose}
+                    onChange={handleInviteInputChange('pilotPurpose')}
+                    disabled={inviting}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Volunteer Expectations (one per line)</Label>
+                  <Textarea
+                    placeholder="What volunteers should do in DailyPaws"
+                    value={inviteUserData.pilotExpectations}
+                    onChange={handleInviteInputChange('pilotExpectations')}
+                    disabled={inviting}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Contact Name (optional)</Label>
+                    <Input
+                      placeholder="Shelter lead"
+                      value={inviteUserData.pilotContactName}
+                      onChange={handleInviteInputChange('pilotContactName')}
+                      disabled={inviting}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Contact Email (optional)</Label>
+                    <Input
+                      type="email"
+                      placeholder="lead@usedailypaws.com"
+                      value={inviteUserData.pilotContactEmail}
+                      onChange={handleInviteInputChange('pilotContactEmail')}
+                      disabled={inviting}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </Section>

@@ -51,6 +51,7 @@ const SingleDogContainer = ({ params }) => {
       activityHistory={activityHistory}
       notes={notes}
       token={token}
+      canEdit={hasRole('staff')}
     />
   );
 };

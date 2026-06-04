@@ -33,10 +33,13 @@ export async function getDog(slug, token) {
   }
 }
 
-export async function getActivity(slug, token) {
+export async function getActivity(slug, token, date) {
   try {
     const headers = getAuthHeaders(token);
-    const res = await fetch(API_ENDPOINTS.ACTIVITY_BY_ID(slug), {
+    const url = date
+      ? `${API_ENDPOINTS.ACTIVITY_BY_ID(slug)}?date=${date}`
+      : API_ENDPOINTS.ACTIVITY_BY_ID(slug);
+    const res = await fetch(url, {
       headers,
       cache: 'no-store',
     });
@@ -168,5 +171,25 @@ export async function getDogs(token) {
   } catch (error) {
     console.error('Failed to fetch dogs:', error);
     throw new Error('Failed to fetch data');
+  }
+}
+
+export async function updateDog(dogId, dogData, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const res = await fetch(API_ENDPOINTS.DOG_BY_ID(dogId), {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(dogData),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error('Failed to update dog:', error);
+    throw new Error('Failed to update dog');
   }
 }
