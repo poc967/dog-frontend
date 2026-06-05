@@ -1,6 +1,9 @@
 'use server';
 
 import { API_ENDPOINTS } from '../config/api';
+import { createLogger, logDomainAction } from '../lib/logger';
+
+const logger = createLogger('frontend');
 
 function getAuthHeaders(token) {
   if (!token) {
@@ -13,6 +16,28 @@ function getAuthHeaders(token) {
   };
 }
 
+const getRequestId = (res) => res.headers.get('x-request-id') || undefined;
+
+const buildApiError = async (res, fallbackMessage) => {
+  let message = fallbackMessage;
+
+  try {
+    const errorPayload = await res.json();
+    message =
+      errorPayload?.message ||
+      errorPayload?.data ||
+      errorPayload?.error ||
+      fallbackMessage;
+  } catch (parseError) {
+    message = fallbackMessage;
+  }
+
+  const error = new Error(message);
+  error.status = res.status;
+  error.requestId = getRequestId(res);
+  return error;
+};
+
 export async function createUser(userData, token) {
   try {
     const headers = getAuthHeaders(token);
@@ -23,12 +48,30 @@ export async function createUser(userData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to create user');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'user_created', {
+      result: 'success',
+      targetUserId: json?.data?._id,
+      role: json?.data?.role,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to create user:', error);
+    logger.warn('user_create_failed', {
+      action: 'user_created',
+      result: 'failure',
+      role: userData?.role,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to create user');
   }
 }
@@ -43,12 +86,31 @@ export async function updateUser(userId, userData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to update user');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'user_updated', {
+      result: 'success',
+      targetUserId: userId,
+      role: userData?.role,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to update user:', error);
+    logger.warn('user_update_failed', {
+      action: 'user_updated',
+      result: 'failure',
+      targetUserId: userId,
+      role: userData?.role,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to update user');
   }
 }
@@ -62,7 +124,7 @@ export async function getUser(userId, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch user');
     }
 
     return res.json();
@@ -81,7 +143,7 @@ export async function getAllUsers(token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch users');
     }
 
     return res.json();

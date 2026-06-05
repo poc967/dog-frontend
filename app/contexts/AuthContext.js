@@ -3,8 +3,10 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
+import { createLogger, logDomainAction } from '../lib/logger';
 
 const AuthContext = createContext();
+const logger = createLogger('frontend');
 
 const decodeTokenPayload = (jwtToken) => {
   try {
@@ -82,9 +84,21 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken } = response.data.data;
       setAuthSession({ user: userData, token: authToken });
 
+      logDomainAction(logger, 'user_login', {
+        result: 'success',
+        userId: userData?._id,
+        role: userData?.role,
+      });
+
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
+      logger.warn('user_login_failed', {
+        action: 'user_login',
+        result: 'failure',
+        errorName: error.name,
+        errorMessage: error.response?.data?.message || error.message,
+      });
+
       return {
         success: false,
         error: error.response?.data?.message || 'Login failed',
@@ -93,6 +107,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    if (user?._id) {
+      logDomainAction(logger, 'user_logout', {
+        result: 'success',
+        userId: user._id,
+        role: user.role,
+      });
+    }
+
     // Clear state
     setUser(null);
     setToken(null);
@@ -160,6 +182,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateQuickstartStatus = async (action) => {
+    try {
+      const response = await axios.put(API_ENDPOINTS.AUTH.QUICKSTART, {
+        action,
+      });
+      const updatedUser = response.data.data;
+
+      setUser(updatedUser);
+      localStorage.setItem('authUser', JSON.stringify(updatedUser));
+
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      console.error('Quickstart update error:', error);
+      return {
+        success: false,
+        error:
+          error.response?.data?.message || 'Failed to update quickstart status',
+      };
+    }
+  };
+
   const activateInvite = async (activationToken, password) => {
     try {
       const response = await axios.post(API_ENDPOINTS.AUTH.ACTIVATE, {
@@ -170,9 +213,21 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken } = response.data.data;
       setAuthSession({ user: userData, token: authToken });
 
+      logDomainAction(logger, 'account_activated', {
+        result: 'success',
+        userId: userData?._id,
+        role: userData?.role,
+      });
+
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Activation error:', error);
+      logger.warn('account_activation_failed', {
+        action: 'account_activated',
+        result: 'failure',
+        errorName: error.name,
+        errorMessage: error.response?.data?.message || error.message,
+      });
+
       return {
         success: false,
         error: error.response?.data?.message || 'Activation failed',
@@ -204,6 +259,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateProfile,
+    updateQuickstartStatus,
     changePassword,
     activateInvite,
     hasRole,

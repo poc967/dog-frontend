@@ -3,6 +3,7 @@
 import { COLOR_OPTIONS, API_ENDPOINTS } from '../config/api';
 import { useState } from 'react';
 import axios from 'axios';
+import { createLogger } from '../lib/logger';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -22,6 +23,7 @@ import {
 } from '@/app/components/ui/select';
 
 const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
+  const logger = createLogger('frontend');
   const [dogData, setDogData] = useState({
     name: '',
     level1: 'green',
@@ -132,7 +134,14 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
         throw new Error('Image upload failed');
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
+      logger.warn('dog_image_upload_failed', {
+        action: 'dog_image_uploaded',
+        result: 'failure',
+        errorName: error.name,
+        errorMessage: error.message,
+        dogName: dogData.name || undefined,
+      });
+
       alert('Failed to upload image. You can try selecting a different image.');
 
       // Clear the failed image selection
@@ -150,7 +159,12 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleCancel();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add New Dog</DialogTitle>
@@ -158,7 +172,10 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
 
         <div className="flex flex-col gap-4">
           <div className="space-y-2">
-            <Label htmlFor="dog-name">Dog Name <span className="text-muted-foreground text-xs">(required)</span></Label>
+            <Label htmlFor="dog-name">
+              Dog Name{' '}
+              <span className="text-muted-foreground text-xs">(required)</span>
+            </Label>
             <Input
               id="dog-name"
               placeholder="Enter dog name"
@@ -178,14 +195,23 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dog-location">Initial Location <span className="text-muted-foreground text-xs">(required)</span></Label>
-            <Select value={dogData.location} onValueChange={(val) => handleInputChange('location', val)}>
+            <Label htmlFor="dog-location">
+              Initial Location{' '}
+              <span className="text-muted-foreground text-xs">(required)</span>
+            </Label>
+            <Select
+              value={dogData.location}
+              onValueChange={(val) => handleInputChange('location', val)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select Location..." />
               </SelectTrigger>
               <SelectContent>
                 {locations
-                  .filter((location) => !('walkable' in location) || location.walkable == false)
+                  .filter(
+                    (location) =>
+                      !('walkable' in location) || location.walkable == false,
+                  )
                   .map((location) => (
                     <SelectItem key={location._id} value={location._id}>
                       {location.name}
@@ -197,7 +223,10 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
 
           <div className="space-y-2">
             <Label htmlFor="level1-color">Level 1 Color</Label>
-            <Select value={dogData.level1} onValueChange={(val) => handleInputChange('level1', val)}>
+            <Select
+              value={dogData.level1}
+              onValueChange={(val) => handleInputChange('level1', val)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -213,7 +242,10 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
 
           <div className="space-y-2">
             <Label htmlFor="level2-color">Level 2 Color</Label>
-            <Select value={dogData.level2} onValueChange={(val) => handleInputChange('level2', val)}>
+            <Select
+              value={dogData.level2}
+              onValueChange={(val) => handleInputChange('level2', val)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -237,19 +269,25 @@ const AddDog = ({ isOpen, onClose, onSubmit, locations }) => {
               disabled={isUploading}
             />
             {dogData.imageName && (
-              <p className={`text-xs mt-1 ${dogData.imageUrl ? 'text-emerald-600' : 'text-muted-foreground'}`}>
+              <p
+                className={`text-xs mt-1 ${dogData.imageUrl ? 'text-emerald-600' : 'text-muted-foreground'}`}
+              >
                 {isUploading
                   ? `Uploading ${dogData.imageName}...`
                   : dogData.imageUrl
-                  ? `✓ Image uploaded successfully`
-                  : `Selected: ${dogData.imageName}`}
+                    ? `✓ Image uploaded successfully`
+                    : `Selected: ${dogData.imageName}`}
               </p>
             )}
           </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleCancel} disabled={isUploading}>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isUploading}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isUploading}>

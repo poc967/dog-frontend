@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/auth/login`,
     ACTIVATE: `${API_BASE_URL}/auth/activate`,
     PROFILE: `${API_BASE_URL}/auth/profile`,
+    QUICKSTART: `${API_BASE_URL}/auth/quickstart`,
     CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
     REGISTER: `${API_BASE_URL}/auth/register`,
     INVITE: `${API_BASE_URL}/auth/invite`,

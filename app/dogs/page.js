@@ -501,12 +501,12 @@ const DogsContent = () => {
       <div className="flex flex-row justify-between mb-2.5 max-sm:flex-col">
         <div className="w-[35%] max-sm:w-full max-sm:mb-2">
           <div className="relative">
-          <Input
-            placeholder="Search by name, location, or level..."
-            className="h-8 pr-8"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
+            <Input
+              placeholder="Search by name, location, or level..."
+              className="h-8 pr-8"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
             {searchQuery ? (
               <Button
                 type="button"
@@ -521,7 +521,7 @@ const DogsContent = () => {
             ) : null}
           </div>
         </div>
-        {hasRole('staff') && (
+        {hasRole('volunteer') && (
           <div className="flex gap-1 min-w-[12rem]">
             <Button
               variant="outline"

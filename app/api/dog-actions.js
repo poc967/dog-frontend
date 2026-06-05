@@ -1,6 +1,22 @@
 'use server';
 
 import { API_ENDPOINTS } from '../config/api';
+import { createLogger, logDomainAction } from '../lib/logger';
+
+const logger = createLogger('frontend');
+
+function getAuthHeaders(token) {
+  if (!token) {
+    throw new Error('Authentication token is required');
+  }
+
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+const getRequestId = (res) => res.headers.get('x-request-id') || undefined;
 
 const buildApiError = async (res, fallbackMessage) => {
   let message = fallbackMessage;
@@ -18,19 +34,9 @@ const buildApiError = async (res, fallbackMessage) => {
 
   const error = new Error(message);
   error.status = res.status;
+  error.requestId = getRequestId(res);
   return error;
 };
-
-function getAuthHeaders(token) {
-  if (!token) {
-    throw new Error('Authentication token is required');
-  }
-
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-}
 
 export async function createDog(dogData, token) {
   try {
@@ -45,9 +51,29 @@ export async function createDog(dogData, token) {
       throw await buildApiError(res, 'Failed to create dog');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'dog_created', {
+      result: 'success',
+      dogId: json?.data?._id,
+      dogName: json?.data?.name,
+      locationId: json?.data?.location?._id || dogData.location,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to create dog:', error);
+    logger.warn('dog_create_failed', {
+      action: 'dog_created',
+      result: 'failure',
+      dogName: dogData?.name,
+      locationId: dogData?.location,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw error;
   }
 }
@@ -68,9 +94,26 @@ export async function removeDogs(dogIds, token) {
       throw await buildApiError(res, 'Failed to delete dogs');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'dog_archived', {
+      result: 'success',
+      dogCount: dogIds.length,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to delete dogs:', error);
+    logger.warn('dog_archive_failed', {
+      action: 'dog_archived',
+      result: 'failure',
+      dogCount: dogIds.length,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw error;
   }
 }
@@ -88,9 +131,32 @@ export async function moveOrWalkDogs(dogsData, token) {
       throw await buildApiError(res, 'Failed to move/walk dogs');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(
+      logger,
+      dogsData.type === 'walk' ? 'walk_started' : 'dog_moved',
+      {
+        result: 'success',
+        dogCount: dogsData.dogs?.length || 0,
+        locationId: dogsData.location,
+        requestId: getRequestId(res),
+      },
+    );
+
+    return json;
   } catch (error) {
-    console.error('Failed to move/walk dogs:', error);
+    logger.warn('dog_action_failed', {
+      action: dogsData.type === 'walk' ? 'walk_started' : 'dog_moved',
+      result: 'failure',
+      dogCount: dogsData.dogs?.length || 0,
+      locationId: dogsData.location,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw error;
   }
 }
@@ -108,9 +174,26 @@ export async function completeWalk(walkData, token) {
       throw await buildApiError(res, 'Failed to complete walk');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'walk_ended', {
+      result: 'success',
+      dogCount: walkData.dogIds?.length || 0,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to complete walk:', error);
+    logger.warn('walk_end_failed', {
+      action: 'walk_ended',
+      result: 'failure',
+      dogCount: walkData.dogIds?.length || 0,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw error;
   }
 }
@@ -128,9 +211,26 @@ export async function createBehaviorNote(noteData, token) {
       throw await buildApiError(res, 'Failed to create behavior note');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'note_created', {
+      result: 'success',
+      dogCount: noteData?.dogs?.length || 0,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to create behavior note:', error);
+    logger.warn('note_create_failed', {
+      action: 'note_created',
+      result: 'failure',
+      dogCount: noteData?.dogs?.length || 0,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw error;
   }
 }

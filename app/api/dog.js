@@ -2,6 +2,9 @@
 
 import { API_ENDPOINTS } from '../config/api';
 var FormData = require('form-data');
+import { createLogger, logDomainAction } from '../lib/logger';
+
+const logger = createLogger('frontend');
 
 function getAuthHeaders(token) {
   if (!token) {
@@ -14,6 +17,28 @@ function getAuthHeaders(token) {
   };
 }
 
+const getRequestId = (res) => res.headers.get('x-request-id') || undefined;
+
+const buildApiError = async (res, fallbackMessage) => {
+  let message = fallbackMessage;
+
+  try {
+    const errorPayload = await res.json();
+    message =
+      errorPayload?.message ||
+      errorPayload?.data ||
+      errorPayload?.error ||
+      fallbackMessage;
+  } catch (parseError) {
+    message = fallbackMessage;
+  }
+
+  const error = new Error(message);
+  error.status = res.status;
+  error.requestId = getRequestId(res);
+  return error;
+};
+
 export async function getDog(slug, token) {
   try {
     const headers = getAuthHeaders(token);
@@ -23,7 +48,7 @@ export async function getDog(slug, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch dog');
     }
 
     return res.json();
@@ -45,7 +70,7 @@ export async function getActivity(slug, token, date) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch activity');
     }
 
     return res.json();
@@ -70,12 +95,31 @@ export async function createAlert(dogId, alert, category, tab, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to create alert');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'alert_added', {
+      result: 'success',
+      dogId,
+      priority: category,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to create alert:', error);
+    logger.warn('alert_add_failed', {
+      action: 'alert_added',
+      result: 'failure',
+      dogId,
+      priority: category,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to POST data');
   }
 }
@@ -94,14 +138,31 @@ export async function addFriend(dogId, friendId, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to add friend');
     }
 
     let jsonResponse = await res.json();
 
+    logDomainAction(logger, 'friend_added', {
+      result: 'success',
+      dogId,
+      targetDogId: friendId,
+      requestId: getRequestId(res),
+    });
+
     return jsonResponse;
   } catch (error) {
-    console.error('Failed to add friend:', error);
+    logger.warn('friend_add_failed', {
+      action: 'friend_added',
+      result: 'failure',
+      dogId,
+      targetDogId: friendId,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to POST friend data');
   }
 }
@@ -120,15 +181,31 @@ export async function deleteFriend(dogId, friendId, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to remove friend');
     }
 
     let jsonResponse = await res.json();
-    console.log('deleteFriend response:', jsonResponse);
-    
+
+    logDomainAction(logger, 'friend_removed', {
+      result: 'success',
+      dogId,
+      targetDogId: friendId,
+      requestId: getRequestId(res),
+    });
+
     return jsonResponse;
   } catch (error) {
-    console.error('Failed to delete friend:', error);
+    logger.warn('friend_remove_failed', {
+      action: 'friend_removed',
+      result: 'failure',
+      dogId,
+      targetDogId: friendId,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to DELETE friend data');
   }
 }
@@ -141,16 +218,37 @@ export async function deleteWhiteboard(dogId, type, id, token) {
       {
         method: 'DELETE',
         headers,
-      }
+      },
     );
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to delete whiteboard entry');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'alert_removed', {
+      result: 'success',
+      dogId,
+      type,
+      targetId: id,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to delete whiteboard:', error);
+    logger.warn('alert_remove_failed', {
+      action: 'alert_removed',
+      result: 'failure',
+      dogId,
+      type,
+      targetId: id,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to DELETE data');
   }
 }
@@ -164,7 +262,7 @@ export async function getDogs(token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to fetch dogs');
     }
 
     return res.json();
@@ -184,12 +282,31 @@ export async function updateDog(dogId, dogData, token) {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      throw await buildApiError(res, 'Failed to update dog');
     }
 
-    return res.json();
+    const json = await res.json();
+
+    logDomainAction(logger, 'dog_updated', {
+      result: 'success',
+      dogId,
+      dogName: dogData?.name,
+      requestId: getRequestId(res),
+    });
+
+    return json;
   } catch (error) {
-    console.error('Failed to update dog:', error);
+    logger.warn('dog_update_failed', {
+      action: 'dog_updated',
+      result: 'failure',
+      dogId,
+      dogName: dogData?.name,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
     throw new Error('Failed to update dog');
   }
 }

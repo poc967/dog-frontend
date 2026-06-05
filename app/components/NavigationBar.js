@@ -19,9 +19,11 @@ import { User, LogOut, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { mapRoleToVariant } from '../helpers/helpers';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const NavigationBar = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const pathname = usePathname();
 
   if (!isAuthenticated) {
     return null;
@@ -48,6 +50,18 @@ const NavigationBar = () => {
       </Link>
 
       <div className="flex items-center gap-3">
+        <Button
+          asChild
+          variant={pathname === '/dogs' ? 'secondary' : 'ghost'}
+          size="sm"
+          className="hidden sm:inline-flex gap-2"
+        >
+          <Link href="/dogs" aria-label="Go to dashboard">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Link>
+        </Button>
+
         <Badge variant={mapRoleToVariant(user?.role)}>{user?.role}</Badge>
 
         {isUsernameTruncated(user?.username) ? (
