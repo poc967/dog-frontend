@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:8080';
   }
-  return 'https://api.usedailypaws.com';
+  return 'https://api.sheltercue.com';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
