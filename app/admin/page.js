@@ -140,11 +140,11 @@ const getDefaultInviteUserData = () => ({
   email: '',
   role: 'volunteer',
   emailTemplate: 'basic',
-  pilotTitle: 'Baypath Humane Society DailyPaws Pilot',
+  pilotTitle: 'Baypath Humane Society ShelterCue Pilot',
   pilotPurpose:
     'Baypath Humane Society is launching this pilot to make volunteer handoffs clearer, reduce missed updates, and help every dog get timely, consistent care.',
   pilotExpectations:
-    "Use DailyPaws during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog's current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.",
+    "Use ShelterCue during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog's current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.",
   pilotContactName: 'Pat',
   pilotContactEmail: 'pat@sheltercue.com or support@sheltercue.com',
 });
@@ -573,7 +573,7 @@ const AdminContent = () => {
                 <div className="space-y-2">
                   <Label>Pilot Title</Label>
                   <Input
-                    placeholder="e.g. Baypath DailyPaws Summer Pilot"
+                    placeholder="e.g. Baypath ShelterCue Summer Pilot"
                     value={inviteUserData.pilotTitle}
                     onChange={handleInviteInputChange('pilotTitle')}
                     disabled={inviting}
@@ -593,7 +593,7 @@ const AdminContent = () => {
                 <div className="space-y-2">
                   <Label>Volunteer Expectations (one per line)</Label>
                   <Textarea
-                    placeholder="What volunteers should do in DailyPaws"
+                    placeholder="What volunteers should do in ShelterCue during the pilot"
                     value={inviteUserData.pilotExpectations}
                     onChange={handleInviteInputChange('pilotExpectations')}
                     disabled={inviting}

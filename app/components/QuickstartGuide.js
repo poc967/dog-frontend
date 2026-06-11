@@ -122,7 +122,7 @@ const QuickstartGuide = () => {
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>DailyPaws Quickstart</DialogTitle>
+          <DialogTitle>ShelterCue Quickstart</DialogTitle>
           <DialogDescription>
             Follow this quick flow to log accurate updates during each shift.
             <Link href="/dogs" className="ml-1 underline underline-offset-2">
