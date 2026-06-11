@@ -144,9 +144,9 @@ const getDefaultInviteUserData = () => ({
   pilotPurpose:
     'Baypath Humane Society is launching this pilot to make volunteer handoffs clearer, reduce missed updates, and help every dog get timely, consistent care.',
   pilotExpectations:
-    'Use DailyPaws during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog\'s current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.',
-    pilotContactName: 'Pat',
-    pilotContactEmail: 'pat@usedailypaws.com or support@usedailypaws.com',
+    "Use DailyPaws during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog's current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.",
+  pilotContactName: 'Pat',
+  pilotContactEmail: 'pat@sheltercue.com or support@sheltercue.com',
 });
 
 const AdminContent = () => {
@@ -163,7 +163,9 @@ const AdminContent = () => {
     password: '',
     role: 'volunteer',
   });
-  const [inviteUserData, setInviteUserData] = useState(getDefaultInviteUserData);
+  const [inviteUserData, setInviteUserData] = useState(
+    getDefaultInviteUserData,
+  );
 
   // Location management state
   const [locations, setLocations] = useState([]);
@@ -553,7 +555,9 @@ const AdminContent = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="basic">Basic Invite</SelectItem>
-                    <SelectItem value="pilot">Pilot Onboarding Invite</SelectItem>
+                    <SelectItem value="pilot">
+                      Pilot Onboarding Invite
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -610,7 +614,7 @@ const AdminContent = () => {
                     <Label>Contact Email (optional)</Label>
                     <Input
                       type="email"
-                      placeholder="lead@usedailypaws.com"
+                      placeholder="support@sheltercue.com"
                       value={inviteUserData.pilotContactEmail}
                       onChange={handleInviteInputChange('pilotContactEmail')}
                       disabled={inviting}
