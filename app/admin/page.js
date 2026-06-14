@@ -144,7 +144,7 @@ const getDefaultInviteUserData = () => ({
   pilotPurpose:
     'Baypath Humane Society is launching this pilot to make volunteer handoffs clearer, reduce missed updates, and help every dog get timely, consistent care.',
   pilotExpectations:
-    "Use ShelterCue during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog's current status before taking them out.\nAdd behavior notes when they would help the next volunteer.\nReport anything confusing to Baypath staff so we can improve the workflow quickly.",
+    "Use ShelterCue during each Baypath volunteer shift, not after the fact.\nLog each walk or outing when it starts and when it ends.\nCheck a dog's current status before taking them out.\nAdd behavior or care notes when they would help the next person.\nReport anything confusing so we can improve the workflow quickly.",
   pilotContactName: 'Pat',
   pilotContactEmail: 'pat@sheltercue.com or support@sheltercue.com',
 });

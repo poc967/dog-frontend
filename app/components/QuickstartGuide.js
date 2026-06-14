@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/app/components/ui/button';
@@ -14,36 +13,18 @@ import {
   DialogTitle,
 } from '@/app/components/ui/dialog';
 
-const baseVolunteerSections = [
-  {
-    title: 'Dogs Page',
-    bullets: [
-      'Use search to quickly find a dog by name, location, or level.',
-      'Select one or more dogs with the checkboxes.',
-      'Use Move dog(s), Start walk, and New Note from the action bar.',
-      'Use End walk in a row when a dog returns.',
-    ],
-  },
-  {
-    title: 'Single Dog Page',
-    bullets: [
-      'Open a dog by clicking their name in the table.',
-      'Details: see alerts, diets, behavior context, friends, and misc notes.',
-      'Activity History: review the day timeline and location/walk changes.',
-      'Behavior Notes: add and review behavior notes for handoffs.',
-    ],
-  },
+const shiftSteps = [
+  'Search for the dog you\'re taking out — use the search bar at the top.',
+  'Check their Out Status and any recent notes before you go.',
+  'Check the checkbox next to the dog\'s name — the action buttons appear at the top right.',
+  'Tap Start Walk and confirm the location.',
+  'When the dog returns, tap End Walk in their row.',
+  'Click the dog\'s name → Behavior Notes tab to leave a note for the next person.',
 ];
 
-const staffExtraSections = [
-  {
-    title: 'Staff Extras',
-    bullets: [
-      'Add Dog from the top-left actions on the Dogs page.',
-      'Use the Details tab on a dog to add whiteboard items:',
-      'Alerts, Diet, Behavior, Friends, and Misc updates.',
-    ],
-  },
+const staffExtrasBullets = [
+  'Use Add Dog and Archive from the top left of the Dogs page.',
+  'Open any dog → Details tab to update alerts, diet, behavior, friends, and misc info.',
 ];
 
 const parseDate = (value) => {
@@ -71,14 +52,7 @@ const QuickstartGuide = () => {
   const { user, isAuthenticated, updateQuickstartStatus } = useAuth();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const sections = useMemo(() => {
-    if (!user) return [];
-    if (user.role === 'staff' || user.role === 'admin') {
-      return [...baseVolunteerSections, ...staffExtraSections];
-    }
-    return baseVolunteerSections;
-  }, [user]);
+  const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -124,25 +98,30 @@ const QuickstartGuide = () => {
         <DialogHeader>
           <DialogTitle>ShelterCue Quickstart</DialogTitle>
           <DialogDescription>
-            Follow this quick flow to log accurate updates during each shift.
-            <Link href="/dogs" className="ml-1 underline underline-offset-2">
-              Open Dogs page
-            </Link>
-            .
+            Here&apos;s what to do on your first shift.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {sections.map((section) => (
-            <section key={section.title} className="rounded-md border p-3">
-              <h3 className="font-medium mb-2">{section.title}</h3>
+          <section className="rounded-md border p-3">
+            <h3 className="font-medium mb-2">Your shift workflow</h3>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-muted-foreground">
+              {shiftSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </section>
+
+          {isStaff && (
+            <section className="rounded-md border p-3">
+              <h3 className="font-medium mb-2">Staff extras</h3>
               <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                {section.bullets.map((bullet) => (
+                {staffExtrasBullets.map((bullet) => (
                   <li key={bullet}>{bullet}</li>
                 ))}
               </ul>
             </section>
-          ))}
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2 sm:justify-between">
@@ -157,7 +136,7 @@ const QuickstartGuide = () => {
           </Button>
           <Button type="button" onClick={handleComplete} disabled={saving}>
             <CheckCircle2 className="h-4 w-4 mr-2" />
-            Mark as completed
+            Got it
           </Button>
         </DialogFooter>
       </DialogContent>
