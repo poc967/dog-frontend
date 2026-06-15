@@ -695,9 +695,12 @@ const AdminContent = () => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
                 <Label>Walking Loop</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm text-muted-foreground">
+                    {newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}
+                  </span>
                   <Switch
                     checked={newLocation.walkable}
                     onCheckedChange={(checked) =>
@@ -705,9 +708,6 @@ const AdminContent = () => {
                     }
                     disabled={creatingLocation}
                   />
-                  <span className="text-sm">
-                    {newLocation.walkable ? 'Walking Loop' : 'Pen/Yard'}
-                  </span>
                 </div>
               </div>
 
