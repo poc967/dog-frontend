@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/app/components/ui/select';
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 import styled from 'styled-components';
 import { API_ENDPOINTS } from '../config/api';
 import axios from 'axios';
@@ -155,6 +155,7 @@ const AdminContent = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [resending, setResending] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [newUser, setNewUser] = useState({
@@ -286,6 +287,18 @@ const AdminContent = () => {
       fetchUsers(); // Refresh the users list
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to update user role');
+    }
+  };
+
+  const resendInviteEmail = async (userId) => {
+    setResending(userId);
+    try {
+      await axios.post(API_ENDPOINTS.AUTH.RESEND_INVITE(userId));
+      setSuccess('Invitation resent successfully');
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to resend invite');
+    } finally {
+      setResending(null);
     }
   };
 
@@ -638,6 +651,7 @@ const AdminContent = () => {
                 <TableHead>Username</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -651,22 +665,48 @@ const AdminContent = () => {
                     <Badge variant={getRoleColor(user.role)}>{user.role}</Badge>
                   </TableCell>
                   <TableCell>
+                    {user.mustSetPassword ? (
+                      <Badge variant="warning">Invited</Badge>
+                    ) : user.isActive ? (
+                      <Badge variant="success">Active</Badge>
+                    ) : (
+                      <Badge variant="secondary">Inactive</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(val) => updateUserRole(user._id, val)}
-                    >
-                      <SelectTrigger className="w-[130px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="volunteer">Volunteer</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={user.role}
+                        onValueChange={(val) => updateUserRole(user._id, val)}
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="volunteer">Volunteer</SelectItem>
+                          <SelectItem value="staff">Staff</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {user.mustSetPassword && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => resendInviteEmail(user._id)}
+                          disabled={resending === user._id}
+                          title="Resend invite email"
+                        >
+                          {resending === user._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
