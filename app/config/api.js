@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
     INVITE: `${API_BASE_URL}/auth/invite`,
     USERS: `${API_BASE_URL}/auth/users`,
     USER_BY_ID: (id) => `${API_BASE_URL}/auth/users/${id}`,
+    RESEND_INVITE: (id) => `${API_BASE_URL}/auth/users/${id}/resend-invite`,
   },
 
   // Dynamic endpoints
