@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from '@/app/components/ui/tooltip';
 import { ThemeToggle } from './ThemeToggle';
-import { User, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, CalendarDays, ClipboardList } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { mapRoleToVariant } from '../helpers/helpers';
 import Link from 'next/link';
@@ -61,6 +61,34 @@ const NavigationBar = () => {
             Dashboard
           </Link>
         </Button>
+
+        {user?.staffBoardEnabled && (
+          <Button
+            asChild
+            variant={pathname === '/board' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="hidden sm:inline-flex gap-2"
+          >
+            <Link href="/board" aria-label="Go to board">
+              <CalendarDays className="h-4 w-4" />
+              Board
+            </Link>
+          </Button>
+        )}
+
+        {user?.shiftBoardEnabled && (
+          <Button
+            asChild
+            variant={pathname === '/my-shift' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="hidden sm:inline-flex gap-2"
+          >
+            <Link href="/my-shift" aria-label="Go to my shift">
+              <ClipboardList className="h-4 w-4" />
+              My shift
+            </Link>
+          </Button>
+        )}
 
         <Badge variant={mapRoleToVariant(user?.role)}>{user?.role}</Badge>
 

@@ -43,7 +43,7 @@ const DogDetailTab = (props) => {
               <div className="p-3">
                 {items.length !== 0 ? (
                   <div>
-                    <div>
+                    <div className="flex flex-wrap items-center gap-1.5">
                       {tab === 'Friends'
                         ? items
                             .filter((friend) => !friend.isDeleted)
@@ -56,28 +56,26 @@ const DogDetailTab = (props) => {
                                 allDogs={allDogs}
                               />
                             ))
-                        : PRIORITIES.map((priority, index) => (
-                            <div key={index}>
-                              {items
-                                .filter(
-                                  (a) =>
-                                    normalizePriority(a.priority) === priority,
-                                )
-                                .map((alert, index) =>
-                                  alert && !alert.isDeleted ? (
-                                    <Tags
-                                      key={index}
-                                      alert={alert}
-                                      tab={tab}
-                                      submitDeleteWhiteboard={
-                                        submitDeleteWhiteboard
-                                      }
-                                      allDogs={allDogs}
-                                    />
-                                  ) : null,
-                                )}
-                            </div>
-                          ))}
+                        : PRIORITIES.map((priority, index) =>
+                            items
+                              .filter(
+                                (a) =>
+                                  normalizePriority(a.priority) === priority,
+                              )
+                              .map((alert, index) =>
+                                alert && !alert.isDeleted ? (
+                                  <Tags
+                                    key={index}
+                                    alert={alert}
+                                    tab={tab}
+                                    submitDeleteWhiteboard={
+                                      submitDeleteWhiteboard
+                                    }
+                                    allDogs={allDogs}
+                                  />
+                                ) : null,
+                              ),
+                          )}
                     </div>
                     <Badge
                       variant="outline"

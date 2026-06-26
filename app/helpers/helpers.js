@@ -102,3 +102,19 @@ export function getLocalTime(timestamp) {
 
   return localTime;
 }
+
+export function formatElapsed(totalMinutes) {
+  if (!Number.isFinite(totalMinutes) || totalMinutes < 0) return '';
+  const d = Math.floor(totalMinutes / 1440);
+  const h = Math.floor((totalMinutes % 1440) / 60);
+  const m = totalMinutes % 60;
+  if (d > 0) {
+    const parts = [`${d}d`];
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    return parts.join(' ');
+  }
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}

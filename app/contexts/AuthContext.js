@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize auth state from localStorage on mount
+  // Initialize auth state from localStorage on mount, then refresh from server
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -55,15 +55,34 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
         delete axios.defaults.headers.common['Authorization'];
+        setLoading(false);
       } else {
+        // Restore cached session immediately so UI doesn't flash
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        // Set default authorization header for axios
-        axios.defaults.headers.common['Authorization'] =
-          `Bearer ${storedToken}`;
+        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        setLoading(false);
+
+        // Refresh user data from server in the background so flag changes
+        // made by admins are picked up without requiring a re-login
+        axios
+          .get(API_ENDPOINTS.AUTH.PROFILE, {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          })
+          .then((res) => {
+            const freshUser = res.data?.data;
+            if (freshUser) {
+              setUser(freshUser);
+              localStorage.setItem('authUser', JSON.stringify(freshUser));
+            }
+          })
+          .catch(() => {
+            // Silently ignore — cached session is still valid
+          });
       }
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const setAuthSession = ({ user: userData, token: authToken }) => {
