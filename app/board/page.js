@@ -936,7 +936,7 @@ function BoardContent() {
 
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 className="text-xl font-semibold">Today's board</h1>
+        <h1 className="text-xl font-semibold">Today&apos;s board</h1>
         <div className="flex gap-2">
           <Button
             size="sm"
