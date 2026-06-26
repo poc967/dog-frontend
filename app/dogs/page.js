@@ -45,6 +45,7 @@ import {
   removeDogs,
 } from '../api/dog-actions';
 import Link from 'next/link';
+import { formatElapsed } from '../helpers/helpers';
 
 const Wrapper = styled.div`
   display: flex;
@@ -624,9 +625,9 @@ const DogsContent = () => {
                       <span className="text-xs text-muted-foreground">
                         {dog.outStatus === 'on_walk' &&
                         typeof dog.outElapsedMinutes === 'number'
-                          ? `Out ${dog.outElapsedMinutes}m`
+                          ? `Out ${formatElapsed(dog.outElapsedMinutes)}`
                           : typeof dog.outElapsedMinutes === 'number'
-                            ? `Out ${dog.outElapsedMinutes}m ago`
+                            ? `Out ${formatElapsed(dog.outElapsedMinutes)} ago`
                             : 'No recent out'}
                       </span>
                     </div>
@@ -643,9 +644,9 @@ const DogsContent = () => {
                       <span className="text-xs text-muted-foreground">
                         {dog.outStatus === 'on_walk' &&
                         typeof dog.outElapsedMinutes === 'number'
-                          ? `Out ${dog.outElapsedMinutes}m`
+                          ? `Out ${formatElapsed(dog.outElapsedMinutes)}`
                           : typeof dog.outElapsedMinutes === 'number'
-                            ? `Out ${dog.outElapsedMinutes}m ago`
+                            ? `Out ${formatElapsed(dog.outElapsedMinutes)} ago`
                             : 'No recent out'}
                       </span>
                       {typeof dog.dueInMinutes === 'number' ? (

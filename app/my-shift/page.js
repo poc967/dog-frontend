@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/badge';
 import { AlertCircle, Bell, Footprints, FileText, Check, Loader2, X } from 'lucide-react';
 import { getActiveShifts, completeDog } from '../api/shift-actions';
 import { moveOrWalkDogs, completeWalk, getLocations } from '../api/dog-actions';
-import { getLocalTime } from '../helpers/helpers';
+import { getLocalTime, formatElapsed } from '../helpers/helpers';
 import Link from 'next/link';
 
 const OUT_STATUS_CLASSES = {
@@ -124,9 +124,9 @@ function DogShiftCard({ dogEntry, shiftId, walkableLocations, onUpdate, token })
         >
           {isOnWalk ? 'Out now' : (dog.outStatusLabel || '—')}
           {isOnWalk && typeof dog.outElapsedMinutes === 'number'
-            ? ` · ${dog.outElapsedMinutes}m`
+            ? ` · ${formatElapsed(dog.outElapsedMinutes)}`
             : !isOnWalk && typeof dog.outElapsedMinutes === 'number'
-              ? ` · ${dog.outElapsedMinutes}m ago`
+              ? ` · ${formatElapsed(dog.outElapsedMinutes)} ago`
               : ''}
         </span>
       </div>

@@ -29,6 +29,7 @@ import {
   Footprints,
   MapPin,
   FileText,
+  CheckSquare,
 } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
 import { getDogs } from '../api/dog';
@@ -44,7 +45,7 @@ import {
   createBehaviorNote,
   getLocations,
 } from '../api/dog-actions';
-import { getLocalTime } from '../helpers/helpers';
+import { getLocalTime, formatElapsed } from '../helpers/helpers';
 
 const OUT_STATUS_CLASSES = {
   on_walk: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
@@ -70,7 +71,7 @@ function buildAssignmentMap(shifts) {
           volunteerId: assignment.volunteer?._id || assignment.volunteer,
           shiftId: shift._id,
           completed: dogEntry.completed,
-          notes: assignment.notes,
+          notes: dogEntry.notes || '',
         };
       }
     }
@@ -78,10 +79,11 @@ function buildAssignmentMap(shifts) {
   return map;
 }
 
-function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
+function DogCard({ dog, assignment, shifts, locations, onAssigned, token, selecting, selected, onToggle }) {
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState('');
   const [selectedShift, setSelectedShift] = useState('');
+  const [assignNote, setAssignNote] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState('');
 
@@ -112,16 +114,19 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
       const existingAssignment = shift?.assignments.find(
         (a) => (a.volunteer?._id || a.volunteer) === selectedVolunteer,
       );
-      const existingDogIds = existingAssignment
-        ? existingAssignment.dogs.map((d) => (typeof d.dog === 'object' ? d.dog._id : d.dog))
+      const existingDogs = existingAssignment
+        ? existingAssignment.dogs.map((d) => ({
+            id: typeof d.dog === 'object' ? d.dog._id : d.dog,
+            notes: d.notes || '',
+          }))
         : [];
-      const dogIds = existingDogIds.includes(dog._id)
-        ? existingDogIds
-        : [...existingDogIds, dog._id];
-      await assignVolunteer(selectedShift, { volunteerId: selectedVolunteer, dogIds }, token);
+      const alreadyAssigned = existingDogs.some((d) => d.id === dog._id);
+      const dogs = alreadyAssigned ? existingDogs : [...existingDogs, { id: dog._id, notes: assignNote.trim() }];
+      await assignVolunteer(selectedShift, { volunteerId: selectedVolunteer, dogs }, token);
       setShowAssignForm(false);
       setSelectedVolunteer('');
       setSelectedShift('');
+      setAssignNote('');
       onAssigned();
     } catch (err) {
       setAssignError(err.message || 'Failed to assign');
@@ -189,15 +194,30 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
   return (
     <div
       className={`border rounded-xl overflow-hidden bg-card ${
-        isUnassigned ? 'border-amber-400 dark:border-amber-600' : 'border-border'
+        selected
+          ? 'border-primary ring-2 ring-primary'
+          : isUnassigned
+            ? 'border-amber-400 dark:border-amber-600'
+            : 'border-border'
       }`}
     >
       {/* Card top */}
       <div className="p-3 pb-2 border-b border-border">
         <div className="flex justify-between items-start mb-1">
-          <Link href={`/dogs/${dog._id}`} className="font-medium text-sm truncate pr-2 hover:underline text-primary">
-            {dog.name}
-          </Link>
+          <div className="flex items-center gap-1.5 min-w-0">
+            {selecting && (
+              <input
+                type="checkbox"
+                className="shrink-0 h-3.5 w-3.5 cursor-pointer"
+                checked={!!selected}
+                onChange={onToggle}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            <Link href={`/dogs/${dog._id}`} className="font-medium text-sm truncate pr-2 hover:underline text-primary">
+              {dog.name}
+            </Link>
+          </div>
           <span className="text-xs text-muted-foreground shrink-0 bg-muted px-1.5 py-0.5 rounded">
             {dog.location?.name || '—'}
           </span>
@@ -211,7 +231,7 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
           </span>
           {typeof dog.outElapsedMinutes === 'number' && (
             <span className="text-xs text-muted-foreground ml-1.5">
-              {isOnWalk ? `${dog.outElapsedMinutes}m` : `${dog.outElapsedMinutes}m ago`}
+              {isOnWalk ? formatElapsed(dog.outElapsedMinutes) : `${formatElapsed(dog.outElapsedMinutes)} ago`}
             </span>
           )}
         </div>
@@ -284,6 +304,13 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
                       ))}
                   </SelectContent>
                 </Select>
+                <input
+                  type="text"
+                  value={assignNote}
+                  onChange={(e) => setAssignNote(e.target.value)}
+                  placeholder="Special instruction (optional)…"
+                  className="w-full text-xs border border-border rounded px-2 py-1 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                />
                 <div className="flex gap-1">
                   <Button
                     size="sm"
@@ -298,7 +325,7 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token }) {
                     size="sm"
                     variant="outline"
                     className="h-7 text-xs"
-                    onClick={() => { setShowAssignForm(false); setSelectedVolunteer(''); setSelectedShift(''); setAssignError(''); }}
+                    onClick={() => { setShowAssignForm(false); setSelectedVolunteer(''); setSelectedShift(''); setAssignNote(''); setAssignError(''); }}
                   >
                     Cancel
                   </Button>
@@ -436,6 +463,7 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
   const [addError, setAddError] = useState('');
 
   // Dog picker state — one volunteer open at a time
+  // dogSelection: { [dogId]: { checked: boolean, notes: string } }
   const [editingVolunteerId, setEditingVolunteerId] = useState(null);
   const [dogSelection, setDogSelection] = useState({});
   const [savingDogs, setSavingDogs] = useState(false);
@@ -472,7 +500,7 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
     setAdding(true);
     setAddError('');
     try {
-      await assignVolunteer(shift._id, { volunteerId: newVolId, dogIds: [] }, token);
+      await assignVolunteer(shift._id, { volunteerId: newVolId, dogs: [] }, token);
       setShowAddForm(false);
       setNewVolId('');
       onRefresh();
@@ -484,12 +512,15 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
   };
 
   const openDogPicker = (assignment) => {
-    const currentIds = new Set(
-      assignment.dogs.map((d) => (typeof d.dog === 'object' ? d.dog._id : d.dog)),
-    );
     const selection = {};
     for (const dog of dogs) {
-      selection[dog._id] = currentIds.has(dog._id);
+      const existing = assignment.dogs.find(
+        (d) => (typeof d.dog === 'object' ? d.dog._id : d.dog) === dog._id,
+      );
+      selection[dog._id] = {
+        checked: !!existing,
+        notes: existing?.notes || '',
+      };
     }
     setDogSelection(selection);
     setEditingVolunteerId(assignment.volunteer?._id);
@@ -503,13 +534,13 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
   };
 
   const handleSaveDogs = async (volunteerId) => {
-    const selectedIds = Object.entries(dogSelection)
-      .filter(([, checked]) => checked)
-      .map(([id]) => id);
+    const selectedDogs = Object.entries(dogSelection)
+      .filter(([, { checked }]) => checked)
+      .map(([id, { notes }]) => ({ id, notes: notes.trim() }));
     setSavingDogs(true);
     setDogsError('');
     try {
-      await assignVolunteer(shift._id, { volunteerId, dogIds: selectedIds }, token);
+      await assignVolunteer(shift._id, { volunteerId, dogs: selectedDogs }, token);
       closeDogPicker();
       onRefresh();
     } catch (err) {
@@ -633,37 +664,50 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
                   <p className="text-xs text-muted-foreground mb-2">
                     Select dogs for {assignment.volunteer?.username}
                   </p>
-                  <div className="max-h-48 overflow-y-auto space-y-1.5">
+                  <div className="max-h-64 overflow-y-auto space-y-2">
                     {dogs.length === 0 ? (
                       <p className="text-xs text-muted-foreground">No dogs available.</p>
                     ) : (
                       dogs.map((dog) => {
+                        const sel = dogSelection[dog._id] || { checked: false, notes: '' };
                         const takenBy = assignmentMap[dog._id];
-                        const takenByOther =
-                          takenBy && takenBy.volunteerId !== volunteerId;
+                        const takenByOther = takenBy && takenBy.volunteerId !== volunteerId;
                         return (
-                          <label
-                            key={dog._id}
-                            className="flex items-center gap-2 text-xs cursor-pointer select-none"
-                          >
-                            <input
-                              type="checkbox"
-                              className="rounded border-border"
-                              checked={!!dogSelection[dog._id]}
-                              onChange={(e) =>
-                                setDogSelection((prev) => ({
-                                  ...prev,
-                                  [dog._id]: e.target.checked,
-                                }))
-                              }
-                            />
-                            <span>{dog.name}</span>
-                            {takenByOther && (
-                              <span className="text-muted-foreground">
-                                → {takenBy.volunteerName}
-                              </span>
+                          <div key={dog._id}>
+                            <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                className="rounded border-border"
+                                checked={!!sel.checked}
+                                onChange={(e) =>
+                                  setDogSelection((prev) => ({
+                                    ...prev,
+                                    [dog._id]: { ...sel, checked: e.target.checked },
+                                  }))
+                                }
+                              />
+                              <span>{dog.name}</span>
+                              {takenByOther && (
+                                <span className="text-muted-foreground">
+                                  → {takenBy.volunteerName}
+                                </span>
+                              )}
+                            </label>
+                            {sel.checked && (
+                              <input
+                                type="text"
+                                value={sel.notes}
+                                onChange={(e) =>
+                                  setDogSelection((prev) => ({
+                                    ...prev,
+                                    [dog._id]: { ...sel, notes: e.target.value },
+                                  }))
+                                }
+                                placeholder="Special instruction…"
+                                className="ml-5 mt-1 w-[calc(100%-1.25rem)] text-xs border border-border rounded px-2 py-0.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                              />
                             )}
-                          </label>
+                          </div>
                         );
                       })
                     )}
@@ -691,6 +735,7 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
                   return (
                     <span
                       key={dog._id}
+                      title={dogEntry.notes || undefined}
                       className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
                         dogEntry.completed
                           ? 'border-emerald-300 text-emerald-700 dark:border-emerald-700 dark:text-emerald-400'
@@ -698,6 +743,7 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
                       }`}
                     >
                       {dog.name}
+                      {dogEntry.notes && <FileText className="h-2.5 w-2.5 opacity-60" />}
                       {dogEntry.completed && ' ✓'}
                     </span>
                   );
@@ -708,12 +754,6 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
                   </span>
                 )}
               </div>
-
-              {assignment.notes && (
-                <p className="text-xs text-muted-foreground mt-1.5 italic">
-                  {assignment.notes}
-                </p>
-              )}
             </div>
           );
         })}
@@ -740,6 +780,61 @@ function BoardContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creatingShift, setCreatingShift] = useState(false);
+
+  // Multi-select / bulk assign
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkShift, setBulkShift] = useState('');
+  const [bulkVolunteer, setBulkVolunteer] = useState('');
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+  const [bulkError, setBulkError] = useState('');
+
+  const toggleSelect = (dogId) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(dogId) ? next.delete(dogId) : next.add(dogId);
+      return next;
+    });
+  };
+
+  const cancelSelecting = () => {
+    setSelecting(false);
+    setSelectedIds(new Set());
+    setBulkShift('');
+    setBulkVolunteer('');
+    setBulkError('');
+  };
+
+  const handleBulkAssign = async () => {
+    const effectiveShift = bulkShift || (shifts.length === 1 ? shifts[0]._id : '');
+    if (!effectiveShift || !bulkVolunteer || selectedIds.size === 0) return;
+    setBulkAssigning(true);
+    setBulkError('');
+    try {
+      const shift = shifts.find((s) => s._id === effectiveShift);
+      const existing = shift?.assignments.find(
+        (a) => (a.volunteer?._id || a.volunteer) === bulkVolunteer,
+      );
+      const existingDogs = existing
+        ? existing.dogs.map((d) => ({
+            id: typeof d.dog === 'object' ? d.dog._id : d.dog,
+            notes: d.notes || '',
+          }))
+        : [];
+      const existingIds = new Set(existingDogs.map((d) => d.id));
+      const newDogs = [...selectedIds]
+        .filter((id) => !existingIds.has(id))
+        .map((id) => ({ id, notes: '' }));
+      const dogs = [...existingDogs, ...newDogs];
+      await assignVolunteer(effectiveShift, { volunteerId: bulkVolunteer, dogs }, token);
+      cancelSelecting();
+      await fetchAll();
+    } catch (err) {
+      setBulkError(err.message || 'Failed to assign');
+    } finally {
+      setBulkAssigning(false);
+    }
+  };
 
   const fetchAll = useCallback(async () => {
     if (!token) return;
@@ -842,14 +937,24 @@ function BoardContent() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-xl font-semibold">Today's board</h1>
-        <Button size="sm" onClick={handleCreateShift} disabled={creatingShift}>
-          {creatingShift ? (
-            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-          ) : (
-            <Plus className="h-4 w-4 mr-1" />
-          )}
-          New shift
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={selecting ? 'secondary' : 'outline'}
+            onClick={selecting ? cancelSelecting : () => setSelecting(true)}
+          >
+            <CheckSquare className="h-4 w-4 mr-1" />
+            {selecting ? 'Cancel' : 'Select dogs'}
+          </Button>
+          <Button size="sm" onClick={handleCreateShift} disabled={creatingShift}>
+            {creatingShift ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4 mr-1" />
+            )}
+            New shift
+          </Button>
+        </div>
       </div>
 
       {/* Active shifts summary */}
@@ -933,6 +1038,9 @@ function BoardContent() {
             locations={locations}
             onAssigned={fetchAll}
             token={token}
+            selecting={selecting}
+            selected={selectedIds.has(dog._id)}
+            onToggle={() => toggleSelect(dog._id)}
           />
         ))}
         {filteredDogs.length === 0 && (
@@ -941,6 +1049,66 @@ function BoardContent() {
           </div>
         )}
       </div>
+
+      {/* Bulk assign bar */}
+      {selecting && selectedIds.size > 0 && (
+        <div className="fixed bottom-5 left-0 right-0 flex justify-center z-50 px-4">
+          <div className="bg-card border border-border rounded-xl shadow-xl px-4 py-3 flex flex-wrap items-center gap-3 w-full max-w-xl">
+            <span className="text-sm font-medium shrink-0">
+              {selectedIds.size} dog{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+            <div className="flex flex-1 items-center gap-2 flex-wrap">
+              {shifts.length > 1 && (
+                <Select value={bulkShift} onValueChange={(v) => { setBulkShift(v); setBulkVolunteer(''); }}>
+                  <SelectTrigger className="h-8 text-xs flex-1 min-w-[120px]">
+                    <SelectValue placeholder="Shift…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shifts.filter((s) => s.status === 'active').map((s) => (
+                      <SelectItem key={s._id} value={s._id}>
+                        {getLocalTime(s.startTime)} shift
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Select
+                value={bulkVolunteer}
+                onValueChange={setBulkVolunteer}
+                disabled={shifts.length > 1 && !bulkShift}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1 min-w-[130px]">
+                  <SelectValue placeholder="Assign to…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(shifts.find((s) => s._id === (bulkShift || shifts[0]?._id))?.assignments || []).map((a) => (
+                    <SelectItem key={a.volunteer?._id} value={a.volunteer?._id}>
+                      {a.volunteer?.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                className="h-8 text-xs"
+                onClick={handleBulkAssign}
+                disabled={bulkAssigning || !bulkVolunteer || (!bulkShift && shifts.length > 1)}
+              >
+                {bulkAssigning && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                Assign
+              </Button>
+            </div>
+            {bulkError && <p className="w-full text-xs text-destructive">{bulkError}</p>}
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-muted-foreground hover:text-foreground"
+              title="Clear selection"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

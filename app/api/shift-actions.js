@@ -39,11 +39,12 @@ export async function createShift(token) {
   return res.json();
 }
 
-export async function assignVolunteer(shiftId, { volunteerId, dogIds, notes }, token) {
+// dogs: [{ id, notes }]
+export async function assignVolunteer(shiftId, { volunteerId, dogs }, token) {
   const res = await fetch(API_ENDPOINTS.SHIFTS.ASSIGN(shiftId), {
     method: 'PUT',
     headers: getAuthHeaders(token),
-    body: JSON.stringify({ volunteerId, dogIds, notes }),
+    body: JSON.stringify({ volunteerId, dogs }),
   });
   if (!res.ok) throw await buildApiError(res, 'Failed to assign volunteer');
   return res.json();
