@@ -116,6 +116,30 @@ const NavigationBar = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            {/* Navigation links — always visible in dropdown, buttons above are hidden on mobile */}
+            <DropdownMenuItem asChild>
+              <Link href="/dogs" className="flex items-center gap-2 cursor-pointer">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            </DropdownMenuItem>
+            {user?.staffBoardEnabled && (
+              <DropdownMenuItem asChild>
+                <Link href="/board" className="flex items-center gap-2 cursor-pointer">
+                  <CalendarDays className="h-4 w-4" />
+                  Board
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {user?.shiftBoardEnabled && (
+              <DropdownMenuItem asChild>
+                <Link href="/my-shift" className="flex items-center gap-2 cursor-pointer">
+                  <ClipboardList className="h-4 w-4" />
+                  My shift
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
             {user?.role === 'admin' && (
               <DropdownMenuItem asChild>
                 <Link
@@ -123,7 +147,7 @@ const NavigationBar = () => {
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <LayoutDashboard className="h-4 w-4" />
-                  Admin Dashboard
+                  Admin
                 </Link>
               </DropdownMenuItem>
             )}

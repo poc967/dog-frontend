@@ -553,8 +553,8 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
   return (
     <div className="border border-border rounded-xl overflow-hidden mb-4">
       {/* Shift header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2 flex-wrap">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium text-sm">
             {getLocalTime(shift.startTime)} shift
@@ -564,11 +564,11 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
             {doneDogs}/{totalDogs} done
           </span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 sm:shrink-0">
           <Button
             variant={showAddForm ? 'secondary' : 'outline'}
             size="sm"
-            className="h-7 text-xs"
+            className="h-8 text-xs flex-1 sm:flex-none sm:h-7"
             onClick={() => {
               setShowAddForm((v) => !v);
               setNewVolId('');
@@ -581,7 +581,7 @@ function ShiftCard({ shift, users, dogs, assignmentMap, onClose, onRefresh, toke
           <Button
             variant="outline"
             size="sm"
-            className="h-7 text-xs text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            className="h-8 text-xs flex-1 sm:flex-none sm:h-7 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={handleClose}
             disabled={closing}
           >
@@ -926,7 +926,7 @@ function BoardContent() {
   }
 
   return (
-    <div className="w-[90vw] max-w-5xl mx-auto mt-4 mb-8 px-2">
+    <div className="w-full max-w-5xl mx-auto mt-4 mb-8 px-3 sm:px-4">
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -976,7 +976,7 @@ function BoardContent() {
       )}
 
       {/* Metrics */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         {[
           { label: 'Total dogs', value: activeDogs.length },
           { label: 'Assigned', value: activeDogs.length - unassignedCount },
