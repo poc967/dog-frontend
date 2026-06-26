@@ -34,6 +34,16 @@ export const API_ENDPOINTS = {
     RESEND_INVITE: (id) => `${API_BASE_URL}/auth/users/${id}/resend-invite`,
   },
 
+  // Shift endpoints
+  SHIFTS: {
+    ACTIVE: `${API_BASE_URL}/shift/active`,
+    CREATE: `${API_BASE_URL}/shift`,
+    ASSIGN: (id) => `${API_BASE_URL}/shift/${id}/assign`,
+    REMOVE_VOLUNTEER: (id, volunteerId) => `${API_BASE_URL}/shift/${id}/assign/${volunteerId}`,
+    COMPLETE_DOG: (id, dogId) => `${API_BASE_URL}/shift/${id}/dog/${dogId}/complete`,
+    CLOSE: (id) => `${API_BASE_URL}/shift/${id}/close`,
+  },
+
   // Dynamic endpoints
   DOG_BY_ID: (id) => `${API_BASE_URL}/dog/${id}`,
   ACTIVITY_BY_ID: (id) => `${API_BASE_URL}/activity/${id}`,

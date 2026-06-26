@@ -1,49 +1,52 @@
-import { Badge } from '@/app/components/ui/badge';
 import { X } from 'lucide-react';
-import { mapColorToVariant } from '../helpers/helpers';
+import { normalizePriority } from '../helpers/helpers';
 import { useAuth } from '../contexts/AuthContext';
+
+const PRIORITY_CLASSES = {
+  red:   'bg-red-50 border-red-300 text-red-700 dark:bg-red-950 dark:border-red-700 dark:text-red-300',
+  green: 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300',
+  blue:  'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300',
+};
+
+function pillClasses(priority) {
+  const p = normalizePriority(priority || 'blue');
+  return PRIORITY_CLASSES[p] || PRIORITY_CLASSES.blue;
+}
 
 const Tags = (props) => {
   const { hasRole } = useAuth();
   const { alert, tab, submitDeleteWhiteboard, allDogs } = props;
 
-  // For friends, the data structure is different - friends are stored as full objects
   const displayText =
     tab === 'Friends'
-      ? alert.name
-        ? alert.name
-        : alert.text || 'Unknown Friend'
+      ? alert.name || alert.text || 'Unknown Friend'
       : alert.text;
 
   const showImage = tab === 'Friends' && alert.imageUrl;
+  const priority = alert.priority || alert.level1 || 'blue';
 
   return (
-    <Badge
-      variant={mapColorToVariant(alert.priority || alert.level1 || 'blue')}
-      className="mb-1 ml-1 gap-1.5 py-1 px-2.5"
+    <span
+      className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border mb-1 ml-1 ${pillClasses(priority)}`}
     >
-      <span className="flex items-center gap-1.5">
-        {showImage && (
-          <img
-            src={alert.imageUrl}
-            alt={alert.name}
-            className="w-5 h-5 rounded-full object-cover"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
-          />
-        )}
-        <span>{displayText}</span>
-      </span>
-      {hasRole('admin') ? (
+      {showImage && (
+        <img
+          src={alert.imageUrl}
+          alt={alert.name}
+          className="w-5 h-5 rounded-full object-cover"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      )}
+      <span>{displayText}</span>
+      {hasRole('admin') && (
         <button
           onClick={() => submitDeleteWhiteboard(alert._id, tab)}
-          className="ml-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5"
+          className="hover:bg-black/10 dark:hover:bg-white/10 rounded-full p-0.5"
         >
           <X className="h-3 w-3" />
         </button>
-      ) : null}
-    </Badge>
+      )}
+    </span>
   );
 };
 

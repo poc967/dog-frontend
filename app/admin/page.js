@@ -37,6 +37,7 @@ import {
   getAllLocations,
 } from '../api/location-actions';
 import { useAuth } from '../contexts/AuthContext';
+import { useUsers } from '../contexts/UsersContext';
 
 const AdminWrapper = styled.div`
   padding: 2rem;
@@ -151,8 +152,7 @@ const getDefaultInviteUserData = () => ({
 
 const AdminContent = () => {
   const { token } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { users, loading, refreshUsers } = useUsers();
   const [creating, setCreating] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [resending, setResending] = useState(null);
@@ -188,18 +188,6 @@ const AdminContent = () => {
   //   return null;
   // }, []);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const response = await axios.get(API_ENDPOINTS.AUTH.USERS);
-      setUsers(response.data.data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setError('Failed to fetch users');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const handleInputChange = (field) => (e) => {
     setNewUser((prev) => ({
       ...prev,
@@ -228,7 +216,7 @@ const AdminContent = () => {
 
       setSuccess('User created successfully');
       setNewUser({ username: '', email: '', password: '', role: 'volunteer' });
-      fetchUsers(); // Refresh the users list
+      refreshUsers();
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create user');
     } finally {
@@ -264,7 +252,7 @@ const AdminContent = () => {
       await axios.post(API_ENDPOINTS.AUTH.INVITE, payload);
       setSuccess('Invitation sent successfully');
       setInviteUserData(getDefaultInviteUserData());
-      fetchUsers();
+      refreshUsers();
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to send invite');
     } finally {
@@ -284,9 +272,18 @@ const AdminContent = () => {
       // });
 
       setSuccess('User role updated successfully');
-      fetchUsers(); // Refresh the users list
+      refreshUsers();
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to update user role');
+    }
+  };
+
+  const updateUserFlag = async (userId, flag, value) => {
+    try {
+      await axios.put(API_ENDPOINTS.AUTH.USER_BY_ID(userId), { [flag]: value });
+      refreshUsers();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to update user');
     }
   };
 
@@ -404,11 +401,10 @@ const AdminContent = () => {
     }
   };
 
-  // Fetch both users and locations on component mount
+  // Fetch locations on component mount (users come from UsersContext)
   useEffect(() => {
-    fetchUsers();
     fetchLocations();
-  }, [fetchUsers, fetchLocations]);
+  }, [fetchLocations]);
 
   if (loading) {
     return (
@@ -653,6 +649,8 @@ const AdminContent = () => {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Shift board</TableHead>
+                <TableHead>Staff board</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -675,6 +673,22 @@ const AdminContent = () => {
                   </TableCell>
                   <TableCell>
                     {new Date(user.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={!!user.shiftBoardEnabled}
+                      onCheckedChange={(checked) =>
+                        updateUserFlag(user._id, 'shiftBoardEnabled', checked)
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={!!user.staffBoardEnabled}
+                      onCheckedChange={(checked) =>
+                        updateUserFlag(user._id, 'staffBoardEnabled', checked)
+                      }
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
