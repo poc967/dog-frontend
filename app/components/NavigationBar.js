@@ -56,9 +56,9 @@ const NavigationBar = () => {
           size="sm"
           className="hidden sm:inline-flex gap-2"
         >
-          <Link href="/dogs" aria-label="Go to dashboard">
+          <Link href="/dogs" aria-label="Go to roster">
             <LayoutDashboard className="h-4 w-4" />
-            Dashboard
+            Roster
           </Link>
         </Button>
 
@@ -120,7 +120,7 @@ const NavigationBar = () => {
             <DropdownMenuItem asChild>
               <Link href="/dogs" className="flex items-center gap-2 cursor-pointer">
                 <LayoutDashboard className="h-4 w-4" />
-                Dashboard
+                Roster
               </Link>
             </DropdownMenuItem>
             {user?.staffBoardEnabled && (

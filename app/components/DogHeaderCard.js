@@ -11,39 +11,37 @@ import { MapPin, Pencil } from 'lucide-react';
 
 // components
 import LevelIndicator from './LevelIndicator';
+import DogAvatar from './DogAvatar';
 
 const DogHeaderCard = (props) => {
   const [isOpen, setIsOpen] = useState(false);
-
-  const toggleIsOpen = () => {
-    setIsOpen(!isOpen);
-  };
+  const hasPhoto = Boolean(props.dog.imageUrl);
 
   return (
     <Card className="mb-4">
       <CardContent className="p-2.5">
         <div className="flex flex-row items-start">
-          <Image
-            src={props.dog.imageUrl || '/dog.png'}
-            width={115}
-            height={115}
-            className="rounded cursor-pointer"
-            alt="image of dog"
-            onClick={toggleIsOpen}
+          <DogAvatar
+            imageUrl={props.dog.imageUrl}
+            name={props.dog.name}
+            size={115}
+            onClick={hasPhoto ? () => setIsOpen(true) : undefined}
           />
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-[420px] p-2">
-              <DialogTitle className="sr-only">{props.dog.name} photo</DialogTitle>
-              <DialogDescription className="sr-only">Enlarged photo of {props.dog.name}</DialogDescription>
-              <Image
-                src={props.dog.imageUrl || '/dog.png'}
-                width={350}
-                height={350}
-                alt="image of dog"
-                className="rounded"
-              />
-            </DialogContent>
-          </Dialog>
+          {hasPhoto && (
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogContent className="sm:max-w-[420px] p-2">
+                <DialogTitle className="sr-only">{props.dog.name} photo</DialogTitle>
+                <DialogDescription className="sr-only">Enlarged photo of {props.dog.name}</DialogDescription>
+                <Image
+                  src={props.dog.imageUrl}
+                  width={350}
+                  height={350}
+                  alt={`Photo of ${props.dog.name}`}
+                  className="rounded"
+                />
+              </DialogContent>
+            </Dialog>
+          )}
           <div className="pl-4">
             <div className="flex flex-row items-center">
               <h3 className="text-lg font-semibold mr-2">
