@@ -15,7 +15,7 @@ import { Plus } from 'lucide-react';
 import Tags from './Tag';
 
 const DogDetailTab = (props) => {
-  const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard, allDogs } =
+  const { dog, toggleAlertsModalIsOpen, submitDeleteWhiteboard, submitEditWhiteboard, allDogs } =
     props;
 
   return (
@@ -68,9 +68,8 @@ const DogDetailTab = (props) => {
                                     key={index}
                                     alert={alert}
                                     tab={tab}
-                                    submitDeleteWhiteboard={
-                                      submitDeleteWhiteboard
-                                    }
+                                    submitDeleteWhiteboard={submitDeleteWhiteboard}
+                                    submitEditWhiteboard={submitEditWhiteboard}
                                     allDogs={allDogs}
                                   />
                                 ) : null,

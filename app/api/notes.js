@@ -32,6 +32,26 @@ export async function getNotes(slug, token) {
   }
 }
 
+export async function editNote(noteId, text, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const res = await fetch(`${API_BASE_URL}/note/${noteId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ text }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error('Failed to edit note:', error);
+    throw new Error('Failed to edit note');
+  }
+}
+
 export async function createNote(text, dogs, token) {
   try {
     const headers = getAuthHeaders(token);

@@ -253,6 +253,47 @@ export async function deleteWhiteboard(dogId, type, id, token) {
   }
 }
 
+export async function editWhiteboard(dogId, type, id, data, priority, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const res = await fetch(API_ENDPOINTS.EDIT_WHITEBOARD(dogId, type, id), {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data, priority }),
+    });
+
+    if (!res.ok) {
+      throw await buildApiError(res, 'Failed to edit whiteboard entry');
+    }
+
+    const json = await res.json();
+
+    logDomainAction(logger, 'alert_edited', {
+      result: 'success',
+      dogId,
+      type,
+      targetId: id,
+      requestId: getRequestId(res),
+    });
+
+    return json;
+  } catch (error) {
+    logger.warn('alert_edit_failed', {
+      action: 'alert_edited',
+      result: 'failure',
+      dogId,
+      type,
+      targetId: id,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
+    throw new Error('Failed to edit whiteboard entry');
+  }
+}
+
 export async function getDogs(token) {
   try {
     const headers = getAuthHeaders(token);

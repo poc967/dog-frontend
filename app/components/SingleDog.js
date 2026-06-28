@@ -5,8 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { useEffect, useState } from 'react';
 import { DOG_HEADER_TABS } from '@/app/constants/constants';
 import { toSnakeCase } from '@/app/helpers/helpers';
-import { createNote } from '../api/notes';
-import { createAlert, deleteWhiteboard, getDogs, addFriend, deleteFriend, getActivity, updateDog } from '../api/dog';
+import { createNote, editNote } from '../api/notes';
+import { createAlert, deleteWhiteboard, editWhiteboard, getDogs, addFriend, deleteFriend, getActivity, updateDog } from '../api/dog';
 import EditDogModal from './EditDogModal';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -65,6 +65,8 @@ const TabPanelRenderer = ({
   newNote,
   toggleAlertsModalIsOpen,
   submitDeleteWhiteboard,
+  submitEditWhiteboard,
+  handleEditNote,
   allDogs,
   selectedDate,
   onPrevDay,
@@ -83,6 +85,8 @@ const TabPanelRenderer = ({
       newNote={newNote}
       toggleAlertsModalIsOpen={toggleAlertsModalIsOpen}
       submitDeleteWhiteboard={submitDeleteWhiteboard}
+      submitEditWhiteboard={submitEditWhiteboard}
+      handleEditNote={handleEditNote}
       allDogs={allDogs}
       selectedDate={selectedDate}
       onPrevDay={onPrevDay}
@@ -248,6 +252,16 @@ const SingleDog = (props) => {
     await setTab(null);
   };
 
+  const handleEditNote = async (noteId, newText) => {
+    const updated = await editNote(noteId, newText, props.token);
+    setNotes((prev) => prev.map((n) => (n._id === noteId ? { ...n, text: updated.text } : n)));
+  };
+
+  const submitEditWhiteboard = async (alertId, tab, newText, priority) => {
+    const res = await editWhiteboard(dog._id, tab, alertId, newText, priority, props.token);
+    setDog({ ...dog, [tab.toLowerCase()]: res.message });
+  };
+
   const submitDeleteWhiteboard = async (alertId, tab) => {
     let res;
     
@@ -324,6 +338,8 @@ const SingleDog = (props) => {
                 handleNewNoteChange={handleNewNoteChange}
                 handleNewCategoryChange={handleNewCategoryChange}
                 submitDeleteWhiteboard={submitDeleteWhiteboard}
+                submitEditWhiteboard={submitEditWhiteboard}
+                handleEditNote={handleEditNote}
                 allDogs={allDogs}
                 selectedDate={selectedDate}
                 onPrevDay={handlePrevDay}

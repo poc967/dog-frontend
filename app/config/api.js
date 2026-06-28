@@ -50,4 +50,6 @@ export const API_ENDPOINTS = {
   DOG_TAB: (dogId, tab) => `${API_BASE_URL}/dog/${dogId}/${tab.toLowerCase()}`,
   DELETE_WHITEBOARD: (dogId, type, id) =>
     `${API_BASE_URL}/dog/${dogId}/${type.toLowerCase()}/${id}`,
+  EDIT_WHITEBOARD: (dogId, type, id) =>
+    `${API_BASE_URL}/dog/${dogId}/${type.toLowerCase()}/${id}`,
 };
