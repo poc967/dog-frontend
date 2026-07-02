@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   LOCATIONS: `${API_BASE_URL}/settings/location`,
   ACTIVITIES: `${API_BASE_URL}/activity`,
   COMPLETE_WALK: `${API_BASE_URL}/activity/complete-walk`,
+  COMPLETE_HANG: `${API_BASE_URL}/activity/complete-hang`,
   NOTES: `${API_BASE_URL}/note/new`,
   IMAGE_UPLOAD: `${API_BASE_URL}/upload/image`,
 

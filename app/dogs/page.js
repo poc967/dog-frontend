@@ -18,6 +18,7 @@ import {
   Archive,
   ArrowLeftRight,
   Footprints,
+  Heart,
   FileText,
   X,
   AlertCircle,
@@ -40,6 +41,7 @@ import {
   createDog,
   moveOrWalkDogs,
   completeWalk,
+  completeHang,
   createBehaviorNote,
   getLocations,
   removeDogs,
@@ -90,6 +92,8 @@ const DogsContent = () => {
   const [dogs, setDogs] = useState([]);
   const [selectedDog, setSelectedDog] = useState(null);
   const [endingWalkDog, setEndingWalkDog] = useState('');
+  const [endingHangDog, setEndingHangDog] = useState('');
+  const [startingHang, setStartingHang] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [newLocation, setNewLocation] = useState(null);
   const [locations, setLocations] = useState([]);
@@ -102,6 +106,8 @@ const DogsContent = () => {
     switch (status) {
       case 'on_walk':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      case 'on_hang':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100';
       case 'due_soon':
         return 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100';
       case 'overdue':
@@ -244,6 +250,87 @@ const DogsContent = () => {
         );
       }
       setEndingWalkDog('');
+    }
+  };
+
+  const handleStartHang = async () => {
+    const dogIds = selectedDogs.map((d) => d._id);
+    setActionError('');
+    setActionSuccess('');
+    setStartingHang(true);
+
+    try {
+      await moveOrWalkDogs({ type: 'hang', dogs: dogIds }, token);
+
+      setDogs(
+        dogs.map((dog) =>
+          dogIds.includes(dog._id)
+            ? {
+                ...dog,
+                isHanging: true,
+                lastOutAt: new Date().toISOString(),
+                lastOutType: 'hang',
+                outStatus: 'on_hang',
+                outStatusLabel: 'Hanging',
+                outElapsedMinutes: 0,
+                dueInMinutes: null,
+              }
+            : dog,
+        ),
+      );
+      setActionSuccess('Hang session started.');
+      setSelectedDogs([]);
+    } catch (error) {
+      console.error('Error starting hang:', error);
+      if (error.status === 409) {
+        setActionError(error.message || 'Conflict starting hang. Data has been refreshed.');
+        await fetchDogs();
+      } else {
+        setActionError(error.message || 'Failed to start hang.');
+      }
+    } finally {
+      setStartingHang(false);
+    }
+  };
+
+  const submitEndHang = async (dogToUpdate) => {
+    setActionError('');
+    setActionSuccess('');
+    setEndingHangDog(dogToUpdate._id);
+
+    try {
+      await completeHang({ dogIds: [dogToUpdate._id] }, token);
+
+      setDogs(
+        dogs.map((dog) =>
+          dog._id === dogToUpdate._id
+            ? {
+                ...dog,
+                isHanging: false,
+                lastOutAt: new Date().toISOString(),
+                lastOutType: 'hang',
+                outStatus: 'returned',
+                outStatusLabel: 'Returned',
+                outElapsedMinutes: 0,
+                dueInMinutes: Number(dog.targetOutIntervalMinutes) || 240,
+              }
+            : dog,
+        ),
+      );
+      setActionSuccess('Hang session completed.');
+      setEndingHangDog('');
+    } catch (error) {
+      console.error('Error ending hang:', error);
+      if (error.status === 409) {
+        setActionError(
+          error.message ||
+            'This hang was already completed by another user. Data has been refreshed.',
+        );
+        await fetchDogs();
+      } else {
+        setActionError(error.message || 'Failed to complete hang. Please try again.');
+      }
+      setEndingHangDog('');
     }
   };
 
@@ -545,6 +632,19 @@ const DogsContent = () => {
             <Button
               variant="outline"
               size="sm"
+              disabled={selectedDogs.length == 0 || startingHang}
+              onClick={handleStartHang}
+            >
+              {startingHang ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Heart className="h-4 w-4 mr-1" />
+              )}
+              Start hang
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               disabled={selectedDogs.length == 0}
               onClick={() => toggleModalOpen('behaviorNote')}
             >
@@ -586,7 +686,7 @@ const DogsContent = () => {
                       checked={selectedDogs.some(
                         (selectedDog) => selectedDog._id === dog._id,
                       )}
-                      disabled={dog.isWalking}
+                      disabled={dog.isWalking || dog.isHanging}
                     />
                   </TableCell>
                   <TableCell>
@@ -623,11 +723,11 @@ const DogsContent = () => {
                         {dog.outStatusLabel || 'Unknown'}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {dog.outStatus === 'on_walk' &&
+                        {(dog.outStatus === 'on_walk' || dog.outStatus === 'on_hang') &&
                         typeof dog.outElapsedMinutes === 'number'
-                          ? `Out ${formatElapsed(dog.outElapsedMinutes)}`
+                          ? `${formatElapsed(dog.outElapsedMinutes)}`
                           : typeof dog.outElapsedMinutes === 'number'
-                            ? `Out ${formatElapsed(dog.outElapsedMinutes)} ago`
+                            ? `${formatElapsed(dog.outElapsedMinutes)} ago`
                             : 'No recent out'}
                       </span>
                     </div>
@@ -642,11 +742,11 @@ const DogsContent = () => {
                         {dog.outStatusLabel || 'Unknown'}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {dog.outStatus === 'on_walk' &&
+                        {(dog.outStatus === 'on_walk' || dog.outStatus === 'on_hang') &&
                         typeof dog.outElapsedMinutes === 'number'
-                          ? `Out ${formatElapsed(dog.outElapsedMinutes)}`
+                          ? `${formatElapsed(dog.outElapsedMinutes)}`
                           : typeof dog.outElapsedMinutes === 'number'
-                            ? `Out ${formatElapsed(dog.outElapsedMinutes)} ago`
+                            ? `${formatElapsed(dog.outElapsedMinutes)} ago`
                             : 'No recent out'}
                       </span>
                       {typeof dog.dueInMinutes === 'number' ? (
@@ -664,11 +764,32 @@ const DogsContent = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => submitEndWalk(dog)}
+                        disabled={endingWalkDog === dog._id}
                         className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground max-sm:px-2"
                       >
-                        <X className="h-4 w-4 mr-1 max-sm:mr-1" />
-                        <span className="max-sm:inline hidden">End</span>
+                        {endingWalkDog === dog._id ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <X className="h-4 w-4 mr-1" />
+                        )}
                         <span className="max-sm:hidden">End walk</span>
+                        <span className="hidden max-sm:inline">End</span>
+                      </Button>
+                    ) : dog.isHanging ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => submitEndHang(dog)}
+                        disabled={endingHangDog === dog._id}
+                        className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground max-sm:px-2"
+                      >
+                        {endingHangDog === dog._id ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Heart className="h-4 w-4 mr-1" />
+                        )}
+                        <span className="max-sm:hidden">End hang</span>
+                        <span className="hidden max-sm:inline">End</span>
                       </Button>
                     ) : null}
                   </TableCell>

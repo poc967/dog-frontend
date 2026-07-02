@@ -198,6 +198,43 @@ export async function completeWalk(walkData, token) {
   }
 }
 
+export async function completeHang(hangData, token) {
+  try {
+    const headers = getAuthHeaders(token);
+    const res = await fetch(API_ENDPOINTS.COMPLETE_HANG, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(hangData),
+    });
+
+    if (!res.ok) {
+      throw await buildApiError(res, 'Failed to complete hang session');
+    }
+
+    const json = await res.json();
+
+    logDomainAction(logger, 'hang_ended', {
+      result: 'success',
+      dogCount: hangData.dogIds?.length || 0,
+      requestId: getRequestId(res),
+    });
+
+    return json;
+  } catch (error) {
+    logger.warn('hang_end_failed', {
+      action: 'hang_ended',
+      result: 'failure',
+      dogCount: hangData.dogIds?.length || 0,
+      statusCode: error.status,
+      requestId: error.requestId,
+      errorName: error.name,
+      errorMessage: error.message,
+    });
+
+    throw error;
+  }
+}
+
 export async function createBehaviorNote(noteData, token) {
   try {
     const headers = getAuthHeaders(token);
