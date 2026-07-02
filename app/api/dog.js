@@ -61,9 +61,21 @@ export async function getDog(slug, token) {
 export async function getActivity(slug, token, date) {
   try {
     const headers = getAuthHeaders(token);
-    const url = date
-      ? `${API_ENDPOINTS.ACTIVITY_BY_ID(slug)}?date=${date}`
-      : API_ENDPOINTS.ACTIVITY_BY_ID(slug);
+
+    let url = API_ENDPOINTS.ACTIVITY_BY_ID(slug);
+    if (date) {
+      // Parse the local YYYY-MM-DD string and compute UTC boundaries for
+      // that local calendar day so the server query is timezone-safe.
+      const [year, month, day] = date.split('-').map(Number);
+      const localStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const localEnd   = new Date(year, month - 1, day + 1, 0, 0, 0, 0);
+      const params = new URLSearchParams({
+        start: localStart.toISOString(),
+        end:   localEnd.toISOString(),
+      });
+      url = `${url}?${params}`;
+    }
+
     const res = await fetch(url, {
       headers,
       cache: 'no-store',
