@@ -27,6 +27,7 @@ import {
   X,
   Loader2,
   Footprints,
+  Heart,
   MapPin,
   FileText,
   CheckSquare,
@@ -42,6 +43,7 @@ import {
 import {
   moveOrWalkDogs,
   completeWalk,
+  completeHang,
   createBehaviorNote,
   getLocations,
 } from '../api/dog-actions';
@@ -49,6 +51,7 @@ import { getLocalTime, formatElapsed } from '../helpers/helpers';
 
 const OUT_STATUS_CLASSES = {
   on_walk: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+  on_hang: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100',
   due_soon: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100',
   overdue: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
   default: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100',
@@ -97,6 +100,7 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token, select
   const isStaffOnly = dog.staffOnly;
   const isUnassigned = !assignment && !isStaffOnly;
   const isOnWalk = dog.outStatus === 'on_walk' || dog.isWalking;
+  const isOnHang = dog.isHanging;
   const walkableLocations = locations.filter((l) => l.walkable);
 
   const togglePanel = (panel) => {
@@ -157,6 +161,33 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token, select
       onAssigned();
     } catch (err) {
       setActionError(err.message || 'Failed to end walk');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleHang = async () => {
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await moveOrWalkDogs({ type: 'hang', dogs: [dog._id] }, token);
+      setActionPanel(null);
+      onAssigned();
+    } catch (err) {
+      setActionError(err.message || 'Failed to start hang session');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEndHang = async () => {
+    setActionLoading(true);
+    setActionError('');
+    try {
+      await completeHang({ dogIds: [dog._id] }, token);
+      onAssigned();
+    } catch (err) {
+      setActionError(err.message || 'Failed to end hang session');
     } finally {
       setActionLoading(false);
     }
@@ -225,13 +256,13 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token, select
         <LevelIndicator color1={dog.level1} color2={dog.level2} small />
         <div className="mt-1.5">
           <span
-            className={`inline-flex text-xs px-1.5 py-0.5 rounded font-medium ${outStatusClass(isOnWalk ? 'on_walk' : dog.outStatus)}`}
+            className={`inline-flex text-xs px-1.5 py-0.5 rounded font-medium ${outStatusClass(isOnWalk ? 'on_walk' : isOnHang ? 'on_hang' : dog.outStatus)}`}
           >
-            {isOnWalk ? 'Out now' : (dog.outStatusLabel || '—')}
+            {isOnWalk ? 'Out now' : isOnHang ? 'Hanging' : (dog.outStatusLabel || '—')}
           </span>
           {typeof dog.outElapsedMinutes === 'number' && (
             <span className="text-xs text-muted-foreground ml-1.5">
-              {isOnWalk ? formatElapsed(dog.outElapsedMinutes) : `${formatElapsed(dog.outElapsedMinutes)} ago`}
+              {isOnWalk || isOnHang ? formatElapsed(dog.outElapsedMinutes) : `${formatElapsed(dog.outElapsedMinutes)} ago`}
             </span>
           )}
         </div>
@@ -420,16 +451,41 @@ function DogCard({ dog, assignment, shifts, locations, onAssigned, token, select
               {actionLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <X className="h-3 w-3 mr-1" />}
               End walk
             </Button>
-          ) : (
+          ) : isOnHang ? (
             <Button
-              variant={actionPanel === 'walk' ? 'secondary' : 'outline'}
+              variant="outline"
               size="sm"
-              className="h-7 text-xs flex-1"
-              onClick={() => togglePanel('walk')}
+              className="h-7 text-xs flex-1 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={handleEndHang}
+              disabled={actionLoading}
             >
-              <Footprints className="h-3 w-3 mr-1" />
-              Walk
+              {actionLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <X className="h-3 w-3 mr-1" />}
+              End hang
             </Button>
+          ) : (
+            <>
+              <Button
+                variant={actionPanel === 'walk' ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-7 text-xs flex-1"
+                onClick={() => togglePanel('walk')}
+                disabled={actionLoading}
+              >
+                <Footprints className="h-3 w-3 mr-1" />
+                Walk
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs flex-1"
+                onClick={handleHang}
+                disabled={actionLoading}
+                title="Start hang session"
+              >
+                {actionLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Heart className="h-3 w-3 mr-1" />}
+                Hang
+              </Button>
+            </>
           )}
           <Button
             variant={actionPanel === 'move' ? 'secondary' : 'outline'}
